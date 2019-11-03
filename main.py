@@ -3,6 +3,8 @@ import argparse
 import cv2
 import numpy as np
 import dlib
+from rotation import face_orientation
+
 from landmark_recognition import landmarks_for_face
 
 
@@ -35,22 +37,41 @@ if args.input_type != 'camera' and args.path is None:
 detector = dlib.get_frontal_face_detector()
 predictor = dlib.shape_predictor("models/shape_predictor_68_face_landmarks.dat")
 
-img = cv2.imread('data/1.jpg')
+img = cv2.imread(args.path)
 gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+img_landmarks = img.copy()
 landmarks = landmarks_for_face(detector, predictor, gray)
 
 if landmarks is not None:
     print('Face found.')
     cnt = 0
     for (x, y) in landmarks:
-        cv2.putText(img, str(cnt), (x, y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
+        cv2.putText(img_landmarks, str(cnt), (x, y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
         cnt += 1
 
-    left_eye = landmarks[36]
-    right_eye = landmarks[45]
+    left_eye_left_corner = landmarks[36]
+    right_eye_right_corner = landmarks[45]
     nose = landmarks[30]
+    chin = landmarks[8]
+    left_mouth = landmarks[48]
+    right_mouth = landmarks[54]
+
+    selected_landmarks = np.array(
+        [landmarks[30], landmarks[8], landmarks[36], landmarks[45], landmarks[48], landmarks[54]], dtype="double")
+
+    imgpts, modelpts, rotate_degree, nose_orienation = face_orientation(img, selected_landmarks)
+
+    cv2.line(img, nose, tuple(imgpts[1].ravel()), (0, 255, 0), 3)  # GREEN
+    cv2.line(img, nose, tuple(imgpts[0].ravel()), (255, 0,), 3)  # BLUE
+    cv2.line(img, nose, tuple(imgpts[2].ravel()), (0, 0, 255), 3)  # RED
+
+    print("Roll: " + rotate_degree[0] + "\nPitch: " + rotate_degree[1] + "\nYaw: " + rotate_degree[2])
+
+    img = cv2.resize(img, (384, 512))
+    img_landmarks = cv2.resize(img_landmarks, (384,512))
 
     cv2.imshow("Frame", img)
+    cv2.imshow("Frame landmarks", img_landmarks)
     cv2.imwrite('data/tmp.png', img)
     cv2.waitKey()
 else:
