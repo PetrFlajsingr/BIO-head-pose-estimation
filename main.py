@@ -10,21 +10,35 @@ def rotate_image(image, angle):
     return result
 
 
+def landmarks_for_face(detector, predictor, image):
+    angle = 0
+    faces = []
+    while len(faces) == 0 and angle < 360:
+        rotated = rotate_image(image, angle)
+        faces = detector(rotated)
+        for face in faces:
+            landmarks = predictor(gray, face)
+
+        angle += 10
+    if angle == 360:
+        return None
+    return landmarks
+
+
 detector = dlib.get_frontal_face_detector()
 predictor = dlib.shape_predictor("models/shape_predictor_68_face_landmarks.dat")
 
 img = cv2.imread('data/4.jpg')
-img = rotate_image(img, 40)
 gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-faces = detector(gray)
-for face in faces:
-    landmarks = predictor(gray, face)
-
+landmarks = landmarks_for_face(detector, predictor, gray)
+if landmarks is not None:
+    print('Face found.')
     for n in range(0, 68):
         x = landmarks.part(n).x
         y = landmarks.part(n).y
         cv2.circle(img, (x, y), 4, (255, 0, 0), -1)
 
-cv2.imshow("Frame", img)
-cv2.waitKey()
-
+    cv2.imshow("Frame", img)
+    cv2.waitKey()
+else:
+    print('Face not found.')
