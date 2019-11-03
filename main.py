@@ -32,9 +32,9 @@ def method0(img, detector, predictor):
 
         axis_points, rotate_degree = face_orientation(img.shape, selected_landmarks)
 
-        cv2.line(img, nose, tuple(imgpts[1].ravel()), (0, 255, 0), 3)  # GREEN
-        cv2.line(img, nose, tuple(imgpts[0].ravel()), (255, 0,), 3)  # BLUE
-        cv2.line(img, nose, tuple(imgpts[2].ravel()), (0, 0, 255), 3)  # RED
+        cv2.line(img, nose, tuple(axis_points[1].ravel()), (0, 255, 0), 3)  # GREEN
+        cv2.line(img, nose, tuple(axis_points[0].ravel()), (255, 0,), 3)  # BLUE
+        cv2.line(img, nose, tuple(axis_points[2].ravel()), (0, 0, 255), 3)  # RED
 
         print("Roll: " + rotate_degree[0] + "\nPitch: " + rotate_degree[1] + "\nYaw: " + rotate_degree[2])
 
