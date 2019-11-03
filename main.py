@@ -138,6 +138,7 @@ def method1(img, detector, predictor, last, yaw, pitch):
 
     return last, yaw, pitch
 
+
 def method2(img, detector, predictor):
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     img_landmarks = img.copy()
@@ -206,11 +207,13 @@ def video_estimation(method, file_path=None):
         if ret:
             if method == 0:
                 method0(frame, detector, predictor)
-            if method == 0:
+            elif method == 1:
                 if method1_last is None:
                     method1_last = method1_init(frame, detector, predictor)
                 else:
                     method1_last, yaw, pitch = method1(frame, detector, predictor, method1_last, yaw, pitch)
+            elif method == 2:
+                method2(frame, detector, predictor)
             if cv2.waitKey(20) & 0xFF == ord('q'):
                 break
         else:
@@ -230,9 +233,6 @@ def pose_estimation(method, file_path):
     elif method == 2:
         method2(img, detector, predictor)
     cv2.waitKey()
-
-
-
 
 
 if args.input_type == 'camera':
