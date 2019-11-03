@@ -2,6 +2,13 @@ import numpy as np
 
 
 def face_orientation2(img_shape, landmarks, nose_length):
+    """
+
+    :param img_shape: img size
+    :param landmarks: landmarks in order left_eye_left_corner, left_eye_right_corner, right_eye_left_corner, right_eye_right_corner
+    :param nose_length: lenght of nose bridge
+    :return: yaw, pitch, roll
+    """
     center = (img_shape[1] / 2, img_shape[0] / 2)
     focal_length = center[0] / np.tan(60 / 2 * np.pi / 180)
 
