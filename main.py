@@ -18,6 +18,14 @@ def landmarks_for_face(detector, predictor, image):
         faces = detector(rotated)
         for face in faces:
             landmarks = predictor(gray, face)
+            image_center = tuple(np.array(image.shape[1::-1]) / 2)
+            rot_mat = cv2.getRotationMatrix2D(image_center, angle, 1.0)
+            for n in range(0, 68):
+                landmark = np.array([landmarks.part(n).x, landmarks.part(n).y, 1], dtype=np.float)
+                landmark *= rot_mat
+                landmarks.part(n).x = landmark[0]
+                landmarks.part(n).y = landmark[1]
+
 
         angle += 10
     if angle == 360:
