@@ -47,6 +47,68 @@ def method0(img, detector, predictor):
         print('Face not found.')
 
 
+def method1_init(img, detector, predictor):
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    landmarks = landmarks_for_face(detector, predictor, gray)
+    result = {}
+
+    eye_distance_tohead_depth_ratio = 1.6
+    if landmarks is not None and len(landmarks) != 0:
+        result['left_eye'] = landmarks[36]
+        result['right_eye'] = landmarks[45]
+        result['nose'] = landmarks[30]
+        eye_distance = np.sqrt(
+            np.power(landmarks[36][0] - landmarks[45][0], 2)
+            + np.power(landmarks[36][1] - landmarks[45][1], 2))
+        result['sphere_radius'] = eye_distance * eye_distance_tohead_depth_ratio / 2
+        result['sphere_circumference'] = np.pi * 2 * result['sphere_radius']
+        return result
+    else:
+        print('Face not found')
+        return None
+
+
+def method1(img, detector, predictor, last, yaw, pitch):
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    img_landmarks = img.copy()
+    landmarks = landmarks_for_face(detector, predictor, gray)
+
+    if landmarks is not None and len(landmarks) != 0:
+        left_eye_left_corner = landmarks[36]
+        right_eye_right_corner = landmarks[45]
+        nose = landmarks[30]
+        roll = 0
+        if left_eye_left_corner[0] != right_eye_right_corner[0] and left_eye_left_corner[1] != right_eye_right_corner[1]:
+            roll = np.rad2deg(np.arctan(
+                (left_eye_left_corner[0] - right_eye_right_corner[0])
+                / (left_eye_left_corner[1] - right_eye_right_corner[1])))
+        yaw += (last['nose'][0] - nose[0]) / last['sphere_circumference'] * 360
+        pitch += (nose[1] - last['nose'][1]) / last['sphere_circumference'] * 360
+        last['left_eye'] = left_eye_left_corner
+        last['right_eye'] = right_eye_right_corner
+        last['nose'] = nose
+
+        x1 = abs(int(500 * (np.cos(yaw) * np.cos(roll))))
+        y1 = abs(int(500 * (np.cos(pitch) * np.sin(roll) + np.cos(roll) * np.sin(pitch) * np.sin(yaw))))
+        x2 = abs(int(500 * (-np.cos(yaw) * np.sin(roll))))
+        y2 = abs(int(500 * (np.cos(pitch) * np.cos(roll) - np.sin(pitch) * np.sin(yaw) * np.sin(roll))))
+        x3 = abs(int(500 * (np.sin(yaw))))
+        y3 = abs(int(500 * (-np.cos(yaw) * np.sin(pitch))))
+        cv2.line(img, (500, 500), (x1, y1), (0, 255, 0), 3)  # GREEN
+        cv2.line(img, (500, 500), (x2, y2), (255, 0,), 3)  # BLUE
+        cv2.line(img, (500, 500), (x3, y3), (0, 0, 255), 3)  # RED
+        print("1: Roll:", roll, "\nPitch", pitch, "\nYaw:", yaw)
+
+        img = cv2.resize(img, (384, 512))
+        img_landmarks = cv2.resize(img_landmarks, (384, 512))
+
+        cv2.imshow("Frame", img)
+        cv2.imshow("Frame landmarks", img_landmarks)
+
+    return last, yaw, pitch
+
+
+
 parser = argparse.ArgumentParser(description='Head pose estimation (yaw, pitch, roll)')
 parser.add_argument('-i',
                     action='store',
@@ -82,10 +144,19 @@ def video_estimation(method, file_path=None):
     else:
         cap = cv2.VideoCapture(file_path)
 
+    method1_last = None
+    yaw = 0.0
+    pitch = 0.0
     while cap.isOpened():
         ret, frame = cap.read()
-        if ret == True:
-            method0(frame, detector, predictor)
+        if ret:
+            if method == 0:
+                method0(frame, detector, predictor)
+            if method == 1:
+                if method1_last is None:
+                    method1_last = method1_init(frame, detector, predictor)
+                else:
+                    method1_last, yaw, pitch = method1(frame, detector, predictor, method1_last, yaw, pitch)
             if cv2.waitKey(20) & 0xFF == ord('q'):
                 break
         else:
@@ -99,7 +170,13 @@ def pose_estimation(method, file_path):
     img = cv2.imread(file_path)
     if method == 0:
         method0(img, detector, predictor)
+    elif method == 1:
+        print('Method 1 is unusable for images.')
+        exit(0)
     cv2.waitKey()
+
+
+
 
 
 if args.input_type == 'camera':
