@@ -34,6 +34,29 @@ if args.input_type != 'camera' and args.path is None:
     print('You need to provide file input.')
     exit(0)
 
+
+def video_estimation(method, file_path=None):
+    if file_path is None:
+        cap = cv2.VideoCapture(0)
+    else:
+        cap = cv2.VideoCapture(file_path)
+
+    while cap.isOpened():
+        ret, frame = cap.read()
+        if ret == True:
+            cv2.imshow('test', frame)
+            if cv2.waitKey(20) & 0xFF == ord('q'):
+                break
+        else:
+            break
+    cap.release()
+
+
+if args.input_type == 'camera':
+    video_estimation(args.method)
+elif args.input_type == 'video':
+    video_estimation(args.method, args.path)
+
 detector = dlib.get_frontal_face_detector()
 predictor = dlib.shape_predictor("models/shape_predictor_68_face_landmarks.dat")
 
