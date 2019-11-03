@@ -30,7 +30,7 @@ def method0(img, detector, predictor):
         selected_landmarks = np.array(
             [nose, chin, left_eye_left_corner, right_eye_right_corner, left_mouth, right_mouth], dtype="double")
 
-        imgpts, modelpts, rotate_degree, nose_orienation = face_orientation(img, selected_landmarks)
+        axis_points, rotate_degree = face_orientation(img.shape, selected_landmarks)
 
         cv2.line(img, nose, tuple(imgpts[1].ravel()), (0, 255, 0), 3)  # GREEN
         cv2.line(img, nose, tuple(imgpts[0].ravel()), (255, 0,), 3)  # BLUE
