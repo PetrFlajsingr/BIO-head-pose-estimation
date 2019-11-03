@@ -14,7 +14,7 @@ def face_orientation2(img_shape, landmarks, nose_length):
 
     roll = np.arctan((landmarks[0][1] - landmarks[1][1]) / (landmarks[0][0] - landmarks[3][0]))
 
-    I1 = (landmarks[0][0] - landmarks[1][0]) * (landmarks[2][0] - landmarks[3][0]) / ((
+    I1 = ((landmarks[0][0] - landmarks[1][0]) * (landmarks[2][0] - landmarks[3][0])) / ((
             landmarks[0][0] - landmarks[2][0]) * (landmarks[1][0] - landmarks[3][0]))
     Q = (1 / np.sqrt(I1)) - 1
 
@@ -23,12 +23,12 @@ def face_orientation2(img_shape, landmarks, nose_length):
     A = (u_delta / v_delta) + 1
     B = ((2 / Q) + 2) * ((u_delta / v_delta) - 1)
     C = ((2 / Q) + 1) * ((u_delta / v_delta) + 1)
-    S = (-B + np.sqrt((B * B) - (4 * A * C)) / (2 * A))
+    S = (-B + np.sqrt((B * B) - (4 * A * C))) / (2 * A)
 
     M = (v_delta * landmarks[0][0]) / (u_delta * landmarks[3][0])
     u1v1_minus = (landmarks[1][0] - landmarks[2][0])
-    u1 = (u_delta * v_delta * M * u1v1_minus) - (
-            M * M * (landmarks[0][0] - landmarks[3][0]) * u1v1_minus * u1v1_minus) / (
+    u1 = ((u_delta * v_delta * M * u1v1_minus) - (
+            M * M * (landmarks[0][0] - landmarks[3][0]) * u1v1_minus * u1v1_minus)) / (
                  v_delta * ((M * u1v1_minus) - u_delta))
     yaw = np.arctan(focal_length / ((S - 1) * u1))
 
