@@ -108,6 +108,7 @@ def method1(img, detector, predictor, last, yaw, pitch):
 
     return last, yaw, pitch
 
+
 def method2(img, detector, predictor):
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     img_landmarks = img.copy()
@@ -130,7 +131,6 @@ def method2(img, detector, predictor):
 
         yaw, pitch, roll = face_orientation2(img.shape, selected_landmarks, np.abs(landmarks[27][0] - landmarks[33][0]))
         print("Roll: " + str(roll) + "\nPitch: " + str(pitch) + "\nYaw: " + str(yaw))
-
 
 
 parser = argparse.ArgumentParser(description='Head pose estimation (yaw, pitch, roll)')
@@ -181,6 +181,8 @@ def video_estimation(method, file_path=None):
                     method1_last = method1_init(frame, detector, predictor)
                 else:
                     method1_last, yaw, pitch = method1(frame, detector, predictor, method1_last, yaw, pitch)
+            if method == 2:
+                method2(frame, detector, predictor)
             if cv2.waitKey(20) & 0xFF == ord('q'):
                 break
         else:
