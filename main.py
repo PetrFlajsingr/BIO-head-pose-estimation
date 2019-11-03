@@ -82,25 +82,31 @@ def method1(img, detector, predictor, last, yaw, pitch):
             roll = np.rad2deg(np.arctan(
                 (left_eye_left_corner[0] - right_eye_right_corner[0])
                 / (left_eye_left_corner[1] - right_eye_right_corner[1])))
+            is_negative = roll < 0
+            roll = 90 - abs(roll)
+            if is_negative:
+                roll = -roll
         yaw += (last['nose'][0] - nose[0]) / last['sphere_circumference'] * 360
         pitch += (nose[1] - last['nose'][1]) / last['sphere_circumference'] * 360
         last['left_eye'] = left_eye_left_corner
         last['right_eye'] = right_eye_right_corner
         last['nose'] = nose
 
-        x1 = abs(int(500 * (np.cos(yaw) * np.cos(roll))))
-        y1 = abs(int(500 * (np.cos(pitch) * np.sin(roll) + np.cos(roll) * np.sin(pitch) * np.sin(yaw))))
-        x2 = abs(int(500 * (-np.cos(yaw) * np.sin(roll))))
-        y2 = abs(int(500 * (np.cos(pitch) * np.cos(roll) - np.sin(pitch) * np.sin(yaw) * np.sin(roll))))
-        x3 = abs(int(500 * (np.sin(yaw))))
-        y3 = abs(int(500 * (-np.cos(yaw) * np.sin(pitch))))
-        cv2.line(img, (500, 500), (x1, y1), (0, 255, 0), 3)  # GREEN
-        cv2.line(img, (500, 500), (x2, y2), (255, 0,), 3)  # BLUE
-        cv2.line(img, (500, 500), (x3, y3), (0, 0, 255), 3)  # RED
+        x1 = abs(int(100 * (np.cos(np.deg2rad(yaw)) * np.cos(np.deg2rad(roll)))))
+        y1 = abs(int(100 * (np.cos(np.deg2rad(pitch)) * np.sin(np.deg2rad(roll)) + np.cos(np.deg2rad(roll)) * np.sin(
+            np.deg2rad(pitch)) * np.sin(np.deg2rad(yaw)))))
+        x2 = abs(int(100 * (-np.cos(np.deg2rad(yaw)) * np.sin(np.deg2rad(roll)))))
+        y2 = abs(int(100 * (np.cos(np.deg2rad(pitch)) * np.cos(np.deg2rad(roll)) - np.sin(np.deg2rad(pitch)) * np.sin(
+            np.deg2rad(yaw)) * np.sin(np.deg2rad(roll)))))
+        x3 = abs(int(100 * (np.sin(np.deg2rad(yaw)))))
+        y3 = abs(int(100 * (-np.cos(np.deg2rad(yaw)) * np.sin(np.deg2rad(pitch)))))
+        cv2.line(img, (100, 100), (x1, y1), (0, 255, 0), 3)  # GREEN
+        cv2.line(img, (100, 100), (x2, y2), (255, 0,), 3)  # BLUE
+        cv2.line(img, (100, 100), (x3, y3), (0, 0, 255), 3)  # RED
+
+
         print("1: Roll:", roll, "\nPitch", pitch, "\nYaw:", yaw)
 
-        img = cv2.resize(img, (384, 512))
-        img_landmarks = cv2.resize(img_landmarks, (384, 512))
 
         cv2.imshow("Frame", img)
         cv2.imshow("Frame landmarks", img_landmarks)
@@ -152,7 +158,7 @@ def video_estimation(method, file_path=None):
         if ret:
             if method == 0:
                 method0(frame, detector, predictor)
-            if method == 1:
+            if method == 0:
                 if method1_last is None:
                     method1_last = method1_init(frame, detector, predictor)
                 else:
