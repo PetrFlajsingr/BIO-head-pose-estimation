@@ -32,7 +32,7 @@ def face_orientation2(img_shape, landmarks, nose_length):
                  v_delta * ((M * u1v1_minus) - u_delta))
     yaw = np.arctan(focal_length / ((S - 1) * u1))
 
-    p0 = (48 * (landmarks[0][0] - landmarks[3][0])) / 86
+    p0 = (48 * (landmarks[0][1] - landmarks[3][1])) / 86
     p1 = nose_length
     p1p1 = p1 * p1
     p0p0 = p0 * p0
