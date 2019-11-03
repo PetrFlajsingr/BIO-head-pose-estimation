@@ -138,6 +138,29 @@ def method1(img, detector, predictor, last, yaw, pitch):
 
     return last, yaw, pitch
 
+def method2(img, detector, predictor):
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    img_landmarks = img.copy()
+    landmarks = landmarks_for_face(detector, predictor, gray)
+
+    if landmarks is not None and len(landmarks) != 0:
+        print('Face found.')
+        cnt = 0
+        for (x, y) in landmarks:
+            cv2.putText(img_landmarks, str(cnt), (x, y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
+            cnt += 1
+
+        left_eye_left_corner = landmarks[36]
+        right_eye_right_corner = landmarks[45]
+        left_eye_right_corner = landmarks[39]
+        right_eye_left_corner = landmarks[42]
+
+        selected_landmarks = np.array(
+            [left_eye_left_corner, left_eye_right_corner, right_eye_left_corner, right_eye_right_corner], dtype="double")
+
+        yaw, pitch, roll = face_orientation2(img.shape, selected_landmarks, np.abs(landmarks[27][0] - landmarks[33][0]))
+        print("Roll: " + str(roll) + "\nPitch: " + str(pitch) + "\nYaw: " + str(yaw))
+
 
 
 parser = argparse.ArgumentParser(description='Head pose estimation (yaw, pitch, roll)')
@@ -204,6 +227,8 @@ def pose_estimation(method, file_path):
     elif method == 1:
         print('Method 1 is unusable for images.')
         exit(0)
+    elif method == 2:
+        method2(img, detector, predictor)
     cv2.waitKey()
 
 
