@@ -12,7 +12,7 @@ def face_orientation2(img_shape, landmarks, nose_length):
     center = (img_shape[1] / 2, img_shape[0] / 2)
     focal_length = center[0] / np.tan(60 / 2 * np.pi / 180)
 
-    roll = np.arctan((landmarks[0][1] - landmarks[1][1]) / (landmarks[0][0] - landmarks[3][0]))
+    roll = np.arctan((landmarks[0][1] - landmarks[3][1]) / (landmarks[0][0] - landmarks[3][0]))
 
     I1 = (landmarks[0][0] - landmarks[1][0]) * (landmarks[2][0] - landmarks[3][0]) / ((
             landmarks[0][0] - landmarks[2][0]) * (landmarks[1][0] - landmarks[3][0]))
@@ -37,8 +37,8 @@ def face_orientation2(img_shape, landmarks, nose_length):
     p1p1 = p1 * p1
     p0p0 = p0 * p0
     focal_lengthfocal_length = focal_length * focal_length
-    E = (focal_length / (p0 * ((p1p1) + (focal_length * focal_length)))) * (
-                p1p1 + np.sqrt(p0p0 * p1p1 - focal_lengthfocal_length * p1p1 + focal_lengthfocal_length * p0p0))
+    E = (focal_length / (p0 * (p1p1 + focal_lengthfocal_length))) \
+        * (p1p1 + np.sqrt(p0p0 * p1p1 - focal_lengthfocal_length * p1p1 + focal_lengthfocal_length * p0p0))
     pitch = np.arctan(E)
 
     return np.degrees(yaw), np.degrees(pitch), np.degrees(roll)
