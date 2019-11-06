@@ -41,10 +41,6 @@ def method0(img, detector, predictor):
 
         axis_points, rotate_degree = face_orientation(img.shape, selected_landmarks)
 
-        cv2.line(img, nose, tuple(axis_points[1].ravel()), (0, 255, 0), 3)  # GREEN
-        cv2.line(img, nose, tuple(axis_points[0].ravel()), (255, 0,), 3)  # BLUE
-        cv2.line(img, nose, tuple(axis_points[2].ravel()), (0, 0, 255), 3)  # RED
-
         print("Roll: " + rotate_degree[0] + "\nPitch: " + rotate_degree[1] + "\nYaw: " + rotate_degree[2])
 
         draw_and_show_landmarks_and_head_pose(landmarks, img, rotate_degree[2], rotate_degree[0], rotate_degree[1])
@@ -104,11 +100,6 @@ def method1(img, detector, predictor, last, yaw, pitch):
         cv2.line(img, (500, 500), (x3, y3), (0, 0, 255), 3)  # RED
         print("1: Roll:", roll, "\nPitch", pitch, "\nYaw:", yaw)
 
-        img = cv2.resize(img, (384, 512))
-        img_landmarks = cv2.resize(img_landmarks, (384, 512))
-
-        cv2.imshow("Frame", img)
-        cv2.imshow("Frame landmarks", img_landmarks)
         draw_and_show_landmarks_and_head_pose(landmarks, img, yaw, pitch, roll)
     else:
         draw_and_show_landmarks_and_head_pose([], img, unknown, unknown, unknown, 'face not detected')
