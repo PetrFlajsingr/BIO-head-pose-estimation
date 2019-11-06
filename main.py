@@ -75,7 +75,6 @@ def method1_init(img, detector, predictor):
 
 def method1(img, detector, predictor, last, yaw, pitch):
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    img_landmarks = img.copy()
     landmarks = landmarks_for_face(detector, predictor, gray)
 
     if landmarks is not None and len(landmarks) != 0:
@@ -87,13 +86,15 @@ def method1(img, detector, predictor, last, yaw, pitch):
             roll = np.rad2deg(np.arctan(
                 (left_eye_left_corner[0] - right_eye_right_corner[0])
                 / (left_eye_left_corner[1] - right_eye_right_corner[1])))
+            is_negative = roll < 0
+            roll = 90 - abs(roll)
+            if is_negative:
+                roll = -roll
         yaw += (last['nose'][0] - nose[0]) / last['sphere_circumference'] * 360
         pitch += (nose[1] - last['nose'][1]) / last['sphere_circumference'] * 360
         last['left_eye'] = left_eye_left_corner
         last['right_eye'] = right_eye_right_corner
         last['nose'] = nose
-
-        print("1: Roll:", roll, "\nPitch", pitch, "\nYaw:", yaw)
 
         draw_and_show_landmarks_and_head_pose(landmarks, img, yaw, pitch, roll)
     else:
@@ -104,7 +105,6 @@ def method1(img, detector, predictor, last, yaw, pitch):
 
 def method2(img, detector, predictor):
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    img_landmarks = img.copy()
     landmarks = landmarks_for_face(detector, predictor, gray)
 
     if landmarks is not None and len(landmarks) != 0:
@@ -222,13 +222,10 @@ if args.input_type != 'camera' and args.path is None:
     exit(0)
 
 
-def video_estimation(method, file_path=None):
+def video_estimation(method, file_path=0):
     detector = dlib.get_frontal_face_detector()
     predictor = dlib.shape_predictor("models/shape_predictor_68_face_landmarks.dat")
-    if file_path is None:
-        cap = cv2.VideoCapture(0)
-    else:
-        cap = cv2.VideoCapture(file_path)
+    cap = cv2.VideoCapture(file_path)
 
     method1_last = None
     yaw = 0.0
@@ -238,12 +235,12 @@ def video_estimation(method, file_path=None):
         if ret:
             if method == 0:
                 method0(frame, detector, predictor)
-            if method == 1:
+            elif method == 1:
                 if method1_last is None:
                     method1_last = method1_init(frame, detector, predictor)
                 else:
                     method1_last, yaw, pitch = method1(frame, detector, predictor, method1_last, yaw, pitch)
-            if method == 2:
+            elif method == 2:
                 method2(frame, detector, predictor)
             if cv2.waitKey(20) & 0xFF == ord('q'):
                 break
@@ -264,6 +261,7 @@ def pose_estimation(method, file_path):
     elif method == 2:
         method2(img, detector, predictor)
     cv2.waitKey()
+
 
 
 
