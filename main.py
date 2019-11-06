@@ -47,7 +47,7 @@ def method0(img, detector, predictor):
 
         print("Roll: " + rotate_degree[0] + "\nPitch: " + rotate_degree[1] + "\nYaw: " + rotate_degree[2])
 
-        draw_and_show_landmarks_and_head_pose(landmarks, img, rotate_degree[0], rotate_degree[1], rotate_degree[2])
+        draw_and_show_landmarks_and_head_pose(landmarks, img, rotate_degree[2], rotate_degree[0], rotate_degree[1])
     else:
         draw_and_show_landmarks_and_head_pose([], img, unknown, unknown, unknown, 'face not detected')
 
