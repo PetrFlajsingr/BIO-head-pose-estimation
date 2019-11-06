@@ -7,7 +7,6 @@ import dlib
 from geom_utils import euclidean_distance, per_elem_diff
 from head_pose_model import HeadPoseModel
 from head_pose_tracker import HeadPoseTracker
-from rotation import face_orientation
 from Rotation2 import face_orientation2, Markers
 
 from landmark_recognition import landmarks_for_face
@@ -183,11 +182,15 @@ def pose_estimation(method, file_path):
     predictor = dlib.shape_predictor(landmark_model_path)
     img = cv2.imread(file_path)
     if method == 0:
-        pass
-        # TODO: implement estimator
+        head_pose_estimator = HeadPoseModel(detector, predictor)
+        success, yaw, pitch, roll = head_pose_estimator.pose_for_image(img)
+        if success:
+            draw_and_show_landmarks_and_head_pose([], img, yaw, pitch, roll)
+        else:
+            draw_and_show_landmarks_and_head_pose([], img, unknown, unknown, unknown, 'Face not found.')
     elif method == 1:
         print('Method 1 is unusable for images.')
-        exit(0)
+        return
     elif method == 2:
         method2(img, detector, predictor)
     cv2.waitKey()
