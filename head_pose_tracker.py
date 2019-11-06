@@ -13,6 +13,10 @@ class HeadPoseTracker:
         self.__pitch = 0.0
         self.__roll = 0.0
         self.__init_locations = {}
+        self.landmarks = []
+
+    def get_name(self):
+        return "Using tracking."
 
     def __repr__(self):
         return 'Yaw: {}, Pitch: {}, Roll: {}'.format(self.__yaw, self.__pitch, self.__roll)
@@ -30,16 +34,16 @@ class HeadPoseTracker:
 
     def __init_tracking(self, image):
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        landmarks = landmarks_for_face(self.__detector, self.__predictor, gray)
+        self.landmarks = landmarks_for_face(self.__detector, self.__predictor, gray)
 
         eye_distance_tohead_depth_ratio = 1.6
-        if landmarks is not None and len(landmarks) != 0:
-            self.__init_locations['left_eye'] = landmarks[36]
-            self.__init_locations['right_eye'] = landmarks[45]
-            self.__init_locations['nose'] = landmarks[30]
+        if self.landmarks is not None and len(self.landmarks) != 0:
+            self.__init_locations['left_eye'] = self.landmarks[36]
+            self.__init_locations['right_eye'] = self.landmarks[45]
+            self.__init_locations['nose'] = self.landmarks[30]
             eye_distance = np.sqrt(
-                np.power(landmarks[36][0] - landmarks[45][0], 2)
-                + np.power(landmarks[36][1] - landmarks[45][1], 2))
+                np.power(self.landmarks[36][0] - self.landmarks[45][0], 2)
+                + np.power(self.landmarks[36][1] - self.landmarks[45][1], 2))
             self.__init_locations['sphere_radius'] = eye_distance * eye_distance_tohead_depth_ratio / 2
             self.__init_locations['sphere_circumference'] = np.pi * 2 * self.__init_locations['sphere_radius']
             self.__is_initialised = True
@@ -48,12 +52,12 @@ class HeadPoseTracker:
 
     def __detect_pose(self, image):
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        landmarks = landmarks_for_face(self.__detector, self.__predictor, gray)
+        self.landmarks = landmarks_for_face(self.__detector, self.__predictor, gray)
 
-        if landmarks is not None and len(landmarks) != 0:
-            left_eye_left_corner = landmarks[36]
-            right_eye_right_corner = landmarks[45]
-            nose = landmarks[30]
+        if self.landmarks is not None and len(self.landmarks) != 0:
+            left_eye_left_corner = self.landmarks[36]
+            right_eye_right_corner = self.landmarks[45]
+            nose = self.landmarks[30]
             if left_eye_left_corner[0] != right_eye_right_corner[0] and left_eye_left_corner[1] != \
                     right_eye_right_corner[1]:
                 self.__roll = np.rad2deg(np.arctan(

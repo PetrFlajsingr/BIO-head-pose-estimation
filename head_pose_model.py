@@ -10,19 +10,23 @@ class HeadPoseModel:
     def __init__(self, detector, predictor):
         self.__detector = detector
         self.__predictor = predictor
+        self.landmarks = []
+
+    def get_name(self):
+        return "Using 3D model."
 
     def pose_for_image(self, image):
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        landmarks = landmarks_for_face(self.__detector, self.__predictor, gray)
+        self.landmarks = landmarks_for_face(self.__detector, self.__predictor, gray)
 
-        if landmarks is not None and len(landmarks) != 0:
+        if self.landmarks is not None and len(self.landmarks) != 0:
             selected_landmarks = np.array(
-                [landmarks[nose_bridge_tip],
-                 landmarks[center_chin],
-                 landmarks[left_eye_left_corner],
-                 landmarks[right_eye_right_corner],
-                 landmarks[mouth_left_corner],
-                 landmarks[mouth_right_corner]], dtype="double")
+                [self.landmarks[nose_bridge_tip],
+                 self.landmarks[center_chin],
+                 self.landmarks[left_eye_left_corner],
+                 self.landmarks[right_eye_right_corner],
+                 self.landmarks[mouth_left_corner],
+                 self.landmarks[mouth_right_corner]], dtype="double")
 
             axis_points, rotate_degree = self.__match_with_model(image.shape, selected_landmarks)
 
@@ -35,7 +39,7 @@ class HeadPoseModel:
         """
             Computes face rotation from unrotated default 3D model
             :param image_shape: size of image with face
-            :param image_points: landmarks on face in order (nose, chin, left eye corner, right eye right, left mouth corner, right mouth corner)
+            :param image_points: self.landmarks on face in order (nose, chin, left eye corner, right eye right, left mouth corner, right mouth corner)
             :return: rotation axis to draw to image and tuple of roll, pitch, yaw
 
             """
