@@ -3,10 +3,13 @@ import argparse
 import cv2
 import numpy as np
 import dlib
+
+from geom_utils import euclidean_distance, per_elem_diff
 from rotation import face_orientation
-from Rotation2 import face_orientation2
+from Rotation2 import face_orientation2, Markers
 
 from landmark_recognition import landmarks_for_face
+from landmark_constants import *
 
 
 def method0(img, detector, predictor):
@@ -115,6 +118,70 @@ def method2(img, detector, predictor):
     landmarks = landmarks_for_face(detector, predictor, gray)
 
     if landmarks is not None and len(landmarks) != 0:
+        roll = np.arctan((landmarks[right_eye_right_corner][y_coord] - landmarks[left_eye_left_corner][y_coord])
+                         / (landmarks[right_eye_right_corner][x_coord] - landmarks[left_eye_left_corner][x_coord]))
+
+        k = 0.703
+        k1 = (landmarks[right_ear][y_coord] - landmarks[left_ear][y_coord]) \
+             / (landmarks[right_ear][x_coord] - landmarks[left_ear][x_coord])
+        q1 = landmarks[left_eye_left_corner][y_coord] - k1 * landmarks[left_eye_left_corner][x_coord]
+
+        if k1 == 0:
+            k1 += 0.0000000001
+        k2 = -1 / k1
+        q2 = landmarks[nostrils_center][y_coord] - k2 * landmarks[nostrils_center][x_coord]
+
+        x_p = (q2 - q1) / (k1 - k2)
+        y_p = k1 * x_p + q1
+
+        l = euclidean_distance(landmarks[right_ear], landmarks[left_ear]) * k
+
+        x_s = (landmarks[right_ear][x_coord] + landmarks[left_ear][x_coord]) / 2
+        y_s = k1 * x_s + q1
+
+        yaw = np.arcsin(euclidean_distance((x_p, y_p), (x_s, y_s)) / l)
+        if euclidean_distance(landmarks[left_ear], landmarks[nostrils_center]) \
+                > euclidean_distance(landmarks[right_ear], landmarks[nostrils_center]):
+            yaw = -yaw
+
+        ###############################################################
+        x_eye_corner_dist, y_eye_corner_dist = \
+            per_elem_diff(landmarks[right_eye_right_corner], landmarks[left_eye_left_corner])
+        x_eye_corner_dist /= 2
+        y_eye_corner_dist /= 2
+
+        x_mouth_corner_dist, y_mouth_corner_dist = \
+            per_elem_diff(landmarks[mouth_right_corner], landmarks[mouth_left_corner])
+        x_mouth_corner_dist /= 2
+        y_mouth_corner_dist /= 2
+
+
+        k = (y_eye_corner_dist - y_mouth_corner_dist) / (x_eye_corner_dist - x_mouth_corner_dist)
+        if k == 0:
+            k += 0.00000001
+        q = y_mouth_corner_dist - k * x_mouth_corner_dist
+
+        k2 = -1 / k
+        q2 = landmarks[nose_bridge_tip][y_coord] - k2 * landmarks[nose_bridge_tip][x_coord]
+
+        x_p = (q2 - q) / (k - k2)
+        y_p = k * x_p + q
+
+        pitch = np.arctan(
+            ((y_p - y_mouth_corner_dist) / (y_eye_corner_dist - y_mouth_corner_dist) - (3.312 / 7.2)) / (3.75 / 7.2)
+        )
+
+        yaw = np.rad2deg(yaw)
+        roll = np.rad2deg(roll)
+        pitch = np.rad2deg(pitch)
+        print("Roll: " + str(roll) + "\nPitch: " + str(pitch) + "\nYaw: " + str(yaw))
+
+
+    '''gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    img_landmarks = img.copy()
+    landmarks = landmarks_for_face(detector, predictor, gray)
+
+    if landmarks is not None and len(landmarks) != 0:
         print('Face found.')
         cnt = 0
         for (x, y) in landmarks:
@@ -126,11 +193,13 @@ def method2(img, detector, predictor):
         left_eye_right_corner = landmarks[39]
         right_eye_left_corner = landmarks[42]
 
-        selected_landmarks = np.array(
-            [left_eye_left_corner, left_eye_right_corner, right_eye_left_corner, right_eye_right_corner], dtype="double")
+        selected_landmarks = Markers(
+            left_eye_left_corner, left_eye_right_corner, right_eye_left_corner, right_eye_right_corner)
 
-        yaw, pitch, roll = face_orientation2(img.shape, selected_landmarks, np.abs(landmarks[27][0] - landmarks[33][0]))
-        print("Roll: " + str(roll) + "\nPitch: " + str(pitch) + "\nYaw: " + str(yaw))
+        observed_bridge_length = np.sqrt(
+            np.power(landmarks[27][0] - landmarks[30][0], 2) + np.power(landmarks[27][1] - landmarks[30][1], 2))
+        yaw, pitch, roll = face_orientation2(img.shape, selected_landmarks, observed_bridge_length)
+        print("Roll: " + str(roll) + "\nPitch: " + str(pitch) + "\nYaw: " + str(yaw))'''
 
 
 parser = argparse.ArgumentParser(description='Head pose estimation (yaw, pitch, roll)')
