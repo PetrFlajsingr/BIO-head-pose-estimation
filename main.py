@@ -41,6 +41,10 @@ def method0(img, detector, predictor):
 
         axis_points, rotate_degree = face_orientation(img.shape, selected_landmarks)
 
+        cv2.line(img, nose, tuple(axis_points[1].ravel()), (0, 255, 0), 3)  # GREEN
+        cv2.line(img, nose, tuple(axis_points[0].ravel()), (255, 0,), 3)  # BLUE
+        cv2.line(img, nose, tuple(axis_points[2].ravel()), (0, 0, 255), 3)  # RED
+
         print("Roll: " + rotate_degree[0] + "\nPitch: " + rotate_degree[1] + "\nYaw: " + rotate_degree[2])
 
         draw_and_show_landmarks_and_head_pose(landmarks, img, rotate_degree[2], rotate_degree[0], rotate_degree[1])
@@ -89,15 +93,6 @@ def method1(img, detector, predictor, last, yaw, pitch):
         last['right_eye'] = right_eye_right_corner
         last['nose'] = nose
 
-        x1 = abs(int(500 * (np.cos(yaw) * np.cos(roll))))
-        y1 = abs(int(500 * (np.cos(pitch) * np.sin(roll) + np.cos(roll) * np.sin(pitch) * np.sin(yaw))))
-        x2 = abs(int(500 * (-np.cos(yaw) * np.sin(roll))))
-        y2 = abs(int(500 * (np.cos(pitch) * np.cos(roll) - np.sin(pitch) * np.sin(yaw) * np.sin(roll))))
-        x3 = abs(int(500 * (np.sin(yaw))))
-        y3 = abs(int(500 * (-np.cos(yaw) * np.sin(pitch))))
-        cv2.line(img, (500, 500), (x1, y1), (0, 255, 0), 3)  # GREEN
-        cv2.line(img, (500, 500), (x2, y2), (255, 0,), 3)  # BLUE
-        cv2.line(img, (500, 500), (x3, y3), (0, 0, 255), 3)  # RED
         print("1: Roll:", roll, "\nPitch", pitch, "\nYaw:", yaw)
 
         draw_and_show_landmarks_and_head_pose(landmarks, img, yaw, pitch, roll)
