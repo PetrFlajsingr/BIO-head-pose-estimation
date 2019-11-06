@@ -5,6 +5,7 @@ import numpy as np
 import dlib
 
 from geom_utils import euclidean_distance, per_elem_diff
+from head_pose_tracker import HeadPoseTracker
 from rotation import face_orientation
 from Rotation2 import face_orientation2, Markers
 
@@ -12,6 +13,7 @@ from landmark_recognition import landmarks_for_face
 from landmark_constants import *
 
 unknown = 'unknown'
+landmark_model_path = "models/shape_predictor_68_face_landmarks.dat"
 
 
 def draw_and_show_landmarks_and_head_pose(landmarks, image, yaw, pitch, roll, info_text = ''):
@@ -51,7 +53,7 @@ def method0(img, detector, predictor):
     else:
         draw_and_show_landmarks_and_head_pose([], img, unknown, unknown, unknown, 'face not detected')
 
-
+'''
 def method1_init(img, detector, predictor):
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     landmarks = landmarks_for_face(detector, predictor, gray)
@@ -101,7 +103,7 @@ def method1(img, detector, predictor, last, yaw, pitch):
         draw_and_show_landmarks_and_head_pose([], img, unknown, unknown, unknown, 'face not detected')
 
     return last, yaw, pitch
-
+'''
 
 def method2(img, detector, predictor):
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -227,21 +229,23 @@ def video_estimation(method, file_path=0):
     predictor = dlib.shape_predictor("models/shape_predictor_68_face_landmarks.dat")
     cap = cv2.VideoCapture(file_path)
 
-    method1_last = None
+    tracker = HeadPoseTracker(detector, predictor)
+    success = False
     yaw = 0.0
     pitch = 0.0
+    roll = 0.0
     while cap.isOpened():
         ret, frame = cap.read()
         if ret:
             if method == 0:
                 method0(frame, detector, predictor)
             elif method == 1:
-                if method1_last is None:
-                    method1_last = method1_init(frame, detector, predictor)
-                else:
-                    method1_last, yaw, pitch = method1(frame, detector, predictor, method1_last, yaw, pitch)
+                success, yaw, pitch, roll = tracker.pose_for_image(frame)
+                draw_and_show_landmarks_and_head_pose([], frame, yaw, pitch, roll)
             elif method == 2:
                 method2(frame, detector, predictor)
+            if not success:
+                draw_and_show_landmarks_and_head_pose([], frame, unknown, unknown, unknown, 'Face not found.')
             if cv2.waitKey(20) & 0xFF == ord('q'):
                 break
         else:
@@ -251,7 +255,7 @@ def video_estimation(method, file_path=0):
 
 def pose_estimation(method, file_path):
     detector = dlib.get_frontal_face_detector()
-    predictor = dlib.shape_predictor("models/shape_predictor_68_face_landmarks.dat")
+    predictor = dlib.shape_predictor(landmark_model_path)
     img = cv2.imread(file_path)
     if method == 0:
         method0(img, detector, predictor)
@@ -261,10 +265,6 @@ def pose_estimation(method, file_path):
     elif method == 2:
         method2(img, detector, predictor)
     cv2.waitKey()
-
-
-
-
 
 
 if args.input_type == 'camera':
