@@ -8,7 +8,7 @@ def landmarks_for_face(detector, predictor, image):
     angle = 0
     faces = []
     result = []
-    while len(faces) == 0 and angle < 360:
+    while len(faces) == 0 and angle < 1:
         rotated = rotate_image(image, angle)
         faces = detector(rotated)
         for face in faces:
