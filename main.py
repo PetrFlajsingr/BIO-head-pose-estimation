@@ -11,19 +11,24 @@ from Rotation2 import face_orientation2, Markers
 from landmark_recognition import landmarks_for_face
 from landmark_constants import *
 
+unknown = 'unknown'
+
+
+def draw_and_show_landmarks_and_head_pose(landmarks, image, yaw, pitch, roll, info_text = ''):
+    for pos in landmarks:
+        cv2.circle(image, pos, 5, (0, 0, 255), -1)
+    cv2.putText(image, 'Yaw: {}'.format(yaw), (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+    cv2.putText(image, 'Pitch: {}'.format(pitch), (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+    cv2.putText(image, 'Roll: {}'.format(roll), (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+    cv2.putText(image, info_text, (10, 120), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
+    cv2.imshow('Out', image)
+
 
 def method0(img, detector, predictor):
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    img_landmarks = img.copy()
     landmarks = landmarks_for_face(detector, predictor, gray)
 
     if landmarks is not None and len(landmarks) != 0:
-        print('Face found.')
-        cnt = 0
-        for (x, y) in landmarks:
-            cv2.putText(img_landmarks, str(cnt), (x, y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
-            cnt += 1
-
         left_eye_left_corner = landmarks[36]
         right_eye_right_corner = landmarks[45]
         nose = landmarks[30]
@@ -42,13 +47,9 @@ def method0(img, detector, predictor):
 
         print("Roll: " + rotate_degree[0] + "\nPitch: " + rotate_degree[1] + "\nYaw: " + rotate_degree[2])
 
-        img = cv2.resize(img, (384, 512))
-        img_landmarks = cv2.resize(img_landmarks, (384, 512))
-
-        cv2.imshow("Frame", img)
-        cv2.imshow("Frame landmarks", img_landmarks)
+        draw_and_show_landmarks_and_head_pose(landmarks, img, rotate_degree[0], rotate_degree[1], rotate_degree[2])
     else:
-        print('Face not found.')
+        draw_and_show_landmarks_and_head_pose([], img, unknown, unknown, unknown, 'face not detected')
 
 
 def method1_init(img, detector, predictor):
@@ -108,6 +109,9 @@ def method1(img, detector, predictor, last, yaw, pitch):
 
         cv2.imshow("Frame", img)
         cv2.imshow("Frame landmarks", img_landmarks)
+        draw_and_show_landmarks_and_head_pose(landmarks, img, yaw, pitch, roll)
+    else:
+        draw_and_show_landmarks_and_head_pose([], img, unknown, unknown, unknown, 'face not detected')
 
     return last, yaw, pitch
 
@@ -155,7 +159,6 @@ def method2(img, detector, predictor):
         x_mouth_corner_dist /= 2
         y_mouth_corner_dist /= 2
 
-
         k = (y_eye_corner_dist - y_mouth_corner_dist) / (x_eye_corner_dist - x_mouth_corner_dist)
         if k == 0:
             k += 0.00000001
@@ -167,6 +170,8 @@ def method2(img, detector, predictor):
         x_p = (q2 - q) / (k - k2)
         y_p = k * x_p + q
 
+        if y_eye_corner_dist - y_mouth_corner_dist == 0:
+            y_eye_corner_dist += 0.00000001
         pitch = np.arctan(
             ((y_p - y_mouth_corner_dist) / (y_eye_corner_dist - y_mouth_corner_dist) - (3.312 / 7.2)) / (3.75 / 7.2)
         )
@@ -175,7 +180,9 @@ def method2(img, detector, predictor):
         roll = np.rad2deg(roll)
         pitch = np.rad2deg(pitch)
         print("Roll: " + str(roll) + "\nPitch: " + str(pitch) + "\nYaw: " + str(yaw))
-
+        draw_and_show_landmarks_and_head_pose(landmarks, img, yaw, pitch, roll)
+    else:
+        draw_and_show_landmarks_and_head_pose([], img, unknown, unknown, unknown, 'face not detected')
 
     '''gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     img_landmarks = img.copy()

@@ -49,4 +49,4 @@ def face_orientation(img_shape, image_points):
     roll = -math.degrees(math.asin(math.sin(roll)))
     yaw = math.degrees(math.asin(math.sin(yaw)))
 
-    return axis_points, (str(int(roll)), str(int(pitch)), str(int(yaw)))
+    return axis_points, (str(roll), str(pitch), str(yaw))
