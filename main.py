@@ -13,7 +13,7 @@ landmark_model_path = "models/shape_predictor_68_face_landmarks.dat"
 
 def draw_and_show_landmarks_and_head_pose(landmarks, image, yaw, pitch, roll, info_text = ''):
     for pos in landmarks:
-        cv2.circle(image, pos, 5, (0, 0, 255), -1)
+        cv2.circle(image, (int(pos[0]), int(pos[1])), 5, (0, 0, 255), -1)
     cv2.putText(image, 'Yaw: {}'.format(yaw), (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
     cv2.putText(image, 'Pitch: {}'.format(pitch), (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
     cv2.putText(image, 'Roll: {}'.format(roll), (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
@@ -73,7 +73,7 @@ def video_estimation(method, file_path=0):
             if success:
                 draw_and_show_landmarks_and_head_pose(head_pose_estimator.landmarks, frame, yaw, pitch, roll, head_pose_estimator.get_name())
             else:
-                draw_and_show_landmarks_and_head_pose([], frame, unknown, unknown, unknown, 'Face not found.')
+                draw_and_show_landmarks_and_head_pose([], frame, unknown, unknown, unknown, 'Face not found.' + head_pose_estimator.get_name())
             input = cv2.waitKey(20) & 0xFF
             if input == ord('q'):
                 break
