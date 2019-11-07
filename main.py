@@ -1,6 +1,6 @@
 import argparse
 
-import cv2
+import cv2.cv2 as cv2
 import dlib
 
 from head_pose_geometry import HeadPoseGeometry
