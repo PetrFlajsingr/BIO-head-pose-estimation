@@ -7,3 +7,6 @@ def euclidean_distance(a, b):
 
 def slope(a, b):
     return (a[1] - b[1]) / (a[0] - b[0])
+
+
+epsilon = 0.0000001

@@ -7,13 +7,16 @@ from landmark_recognition import landmarks_for_face
 
 
 class HeadPoseModel:
+    """
+    Head pose estimation using 3D model points and PnP.
+    """
     def __init__(self, detector, predictor):
         self.__detector = detector
         self.__predictor = predictor
         self.landmarks = []
 
     def get_name(self):
-        return "Using 3D model."
+        return "3D model"
 
     def pose_for_image(self, image):
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -78,7 +81,7 @@ class HeadPoseModel:
         pitch, yaw, roll = [math.radians(_) for _ in euler_angles]
 
         pitch = math.degrees(math.asin(math.sin(pitch)))
-        roll = -math.degrees(math.asin(math.sin(roll)))
+        roll = math.degrees(math.asin(math.sin(roll)))
         yaw = math.degrees(math.asin(math.sin(yaw)))
 
         return axis_points, (roll, pitch, yaw)
