@@ -11,7 +11,7 @@ class HeadPoseTracker:
         self.__predictor = predictor
         self.__is_initialised = False
         self.__yaw = 0.0
-        self.__pitch = 0.0
+        self.__pitch = 15.0
         self.__roll = 0.0
         self.__init_locations = {}
         self.landmarks = []
@@ -32,6 +32,9 @@ class HeadPoseTracker:
 
     def reset(self):
         self.__is_initialised = False
+        self.__yaw = 0.0
+        self.__pitch = 15.0
+        self.__roll = 0.0
 
     def __init_tracking(self, image):
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -69,7 +72,7 @@ class HeadPoseTracker:
                     self.__roll = -self.__roll
             self.__yaw += (self.__init_locations['nose'][x_coord] - self.landmarks[nose_bridge_tip][x_coord]) \
                           / self.__init_locations['sphere_circumference'] * 360
-            self.__pitch += (self.landmarks[nose_bridge_tip][y_coord] - self.__init_locations['nose'][y_coord]) \
+            self.__pitch -= (self.landmarks[nose_bridge_tip][y_coord] - self.__init_locations['nose'][y_coord]) \
                             / self.__init_locations['sphere_circumference'] * 360
             self.__init_locations['left_eye'] = self.landmarks[left_eye_left_corner]
             self.__init_locations['right_eye'] = self.landmarks[right_eye_right_corner]
