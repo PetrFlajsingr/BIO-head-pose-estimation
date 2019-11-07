@@ -73,7 +73,7 @@ def video_estimation(method, file_path=0):
             if success:
                 draw_and_show_landmarks_and_head_pose(head_pose_estimator.landmarks, frame, yaw, pitch, roll, head_pose_estimator.get_name())
             else:
-                draw_and_show_landmarks_and_head_pose([], frame, unknown, unknown, unknown, 'Face not found.')
+                draw_and_show_landmarks_and_head_pose([], frame, unknown, unknown, unknown, 'Face not found.' + head_pose_estimator.get_name())
             input = cv2.waitKey(20) & 0xFF
             if input == ord('q'):
                 break

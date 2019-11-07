@@ -21,7 +21,7 @@ class HeadPoseGeometry:
         if self.landmarks is not None and len(self.landmarks) != 0:
             roll = np.rad2deg(self.__calculate_roll())
             yaw = np.rad2deg(self.__calculate_yaw())
-            pitch = np.rad2deg(self.__calculate_pitch())
+            pitch = np.rad2deg(self.__calculate_pitch(image))
             return True, yaw, pitch, roll
         else:
             return False, 0.0, 0.0, 0.0
@@ -54,10 +54,9 @@ class HeadPoseGeometry:
             yaw = -yaw
         return yaw
 
-    def __calculate_pitch(self):
-        eyes_mid_point = (self.landmarks[right_eye_right_corner] - self.landmarks[left_eye_left_corner]) / 2
-
-        mouth_mid_point = (self.landmarks[mouth_right_corner] - self.landmarks[mouth_left_corner]) / 2
+    def __calculate_pitch(self, image):
+        eyes_mid_point = np.subtract(self.landmarks[right_eye_right_corner], self.landmarks[left_eye_left_corner]) / 2
+        mouth_mid_point = np.subtract(self.landmarks[mouth_right_corner], self.landmarks[mouth_left_corner]) / 2
 
         k = slope(eyes_mid_point, mouth_mid_point)
         if k == 0:
