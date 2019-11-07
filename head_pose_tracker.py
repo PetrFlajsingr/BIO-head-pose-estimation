@@ -22,7 +22,7 @@ class HeadPoseTracker:
         self.landmarks = []
 
     def get_name(self):
-        return "Using tracking."
+        return "tracking"
 
     def __repr__(self):
         return 'Yaw: {}, Pitch: {}, Roll: {}'.format(self.__yaw, self.__pitch, self.__roll)

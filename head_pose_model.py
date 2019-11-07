@@ -16,7 +16,7 @@ class HeadPoseModel:
         self.landmarks = []
 
     def get_name(self):
-        return "Using 3D model."
+        return "3D model"
 
     def pose_for_image(self, image):
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)

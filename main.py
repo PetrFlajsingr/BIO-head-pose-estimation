@@ -7,7 +7,7 @@ from head_pose_geometry import HeadPoseGeometry
 from head_pose_model import HeadPoseModel
 from head_pose_tracker import HeadPoseTracker
 
-unknown = 'unknown'
+unknwn = 'unknown'
 landmark_model_path = "models/shape_predictor_68_face_landmarks.dat"
 
 
@@ -19,7 +19,7 @@ class MultiHeadPoseEstimator:
         self.landmarks = []
 
     def get_name(self):
-        return "Using multi."
+        return "multi"
 
     def pose_for_image(self, image):
         geom_res = self.__geom.pose_for_image(image)
@@ -96,9 +96,11 @@ def video_estimation(method, file_path=0):
         if ret:
             success, yaw, pitch, roll = head_pose_estimator.pose_for_image(frame)
             if success:
-                draw_and_show_landmarks_and_head_pose(head_pose_estimator.landmarks, frame, yaw, pitch, roll, head_pose_estimator.get_name())
+                draw_and_show_landmarks_and_head_pose(head_pose_estimator.landmarks, frame, yaw, pitch, roll,
+                                                      "Using {}.".format(head_pose_estimator.get_name()))
             else:
-                draw_and_show_landmarks_and_head_pose([], frame, unknown, unknown, unknown, 'Face not found.' + head_pose_estimator.get_name())
+                draw_and_show_landmarks_and_head_pose([], frame, unknwn, unknwn, unknwn,
+                                                      "Using {}. Face not found.".format(head_pose_estimator.get_name()))
             input = cv2.waitKey(20) & 0xFF
             if input == ord('q'):
                 break
@@ -128,7 +130,7 @@ def pose_estimation(method, file_path):
     if success:
         draw_and_show_landmarks_and_head_pose(head_pose_estimator.landmarks, img, yaw, pitch, roll)
     else:
-        draw_and_show_landmarks_and_head_pose([], img, unknown, unknown, unknown, 'Face not found.')
+        draw_and_show_landmarks_and_head_pose([], img, unknwn, unknwn, unknwn, 'Face not found.')
     cv2.waitKey()
 
 
