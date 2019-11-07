@@ -11,6 +11,29 @@ unknown = 'unknown'
 landmark_model_path = "models/shape_predictor_68_face_landmarks.dat"
 
 
+class MultiHeadPoseEstimator:
+    def __init__(self, detector, predictor):
+        self.__geom = HeadPoseGeometry(detector, predictor)
+        self.__track = HeadPoseTracker(detector, predictor)
+        self.__model = HeadPoseModel(detector, predictor)
+        self.landmarks = []
+
+    def get_name(self):
+        return "Using multi."
+
+    def pose_for_image(self, image):
+        geom_res = self.__geom.pose_for_image(image)
+        track_res = self.__track.pose_for_image(image)
+        model_res = self.__model.pose_for_image(image)
+        self.landmarks = self.__geom.landmarks
+        return geom_res[0], self.__format_group(geom_res[1], track_res[1], model_res[1]), \
+               self.__format_group(geom_res[2], track_res[2], model_res[2]), \
+               self.__format_group(geom_res[3], track_res[3], model_res[3])
+
+    def __format_group(self, arg1, arg2, arg3):
+        return 'geom: {}, track: {}, model: {}'.format(arg1, arg2, arg3)
+
+
 def draw_and_show_landmarks_and_head_pose(landmarks, image, yaw, pitch, roll, info_text = ''):
     for pos in landmarks:
         cv2.circle(image, (int(pos[0]), int(pos[1])), 5, (0, 0, 255), -1)
@@ -55,6 +78,8 @@ def get_estimator(method, detector, predictor):
         head_pose_estimator = HeadPoseTracker(detector, predictor)
     elif method == 2:
         head_pose_estimator = HeadPoseGeometry(detector, predictor)
+    elif method == 3:
+        head_pose_estimator = MultiHeadPoseEstimator(detector, predictor)
     else:
         raise Exception("Invalid method:{}".format(method))
     return head_pose_estimator
@@ -78,7 +103,7 @@ def video_estimation(method, file_path=0):
             if input == ord('q'):
                 break
             elif input == ord('n'):
-                method = (method + 1) % 3
+                method = (method + 1) % 4
                 head_pose_estimator = get_estimator(method, detector, predictor)
         else:
             break
@@ -96,6 +121,8 @@ def pose_estimation(method, file_path):
         return
     elif method == 2:
         head_pose_estimator = HeadPoseGeometry(detector, predictor)
+    else:
+        raise Exception("Invalid method:{}".format(method))
 
     success, yaw, pitch, roll = head_pose_estimator.pose_for_image(img)
     if success:

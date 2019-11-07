@@ -78,7 +78,7 @@ class HeadPoseModel:
         pitch, yaw, roll = [math.radians(_) for _ in euler_angles]
 
         pitch = math.degrees(math.asin(math.sin(pitch)))
-        roll = -math.degrees(math.asin(math.sin(roll)))
+        roll = math.degrees(math.asin(math.sin(roll)))
         yaw = math.degrees(math.asin(math.sin(yaw)))
 
         return axis_points, (roll, pitch, yaw)
