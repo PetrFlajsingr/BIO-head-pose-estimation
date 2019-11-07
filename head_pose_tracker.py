@@ -42,7 +42,6 @@ class HeadPoseTracker:
             self.__init_locations['left_eye'] = self.landmarks[left_eye_left_corner]
             self.__init_locations['right_eye'] = self.landmarks[right_eye_right_corner]
             self.__init_locations['nose'] = self.landmarks[nose_bridge_tip]
-            np.euc
             eye_distance = np.sqrt(
                 np.power(self.landmarks[left_eye_left_corner][x_coord]
                          - self.landmarks[right_eye_right_corner][x_coord], 2)

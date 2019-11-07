@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-from geom_utils import euclidean_distance, per_elem_diff
+from geom_utils import euclidean_distance, slope
 from landmark_constants import *
 from landmark_recognition import landmarks_for_face
 
@@ -32,8 +32,7 @@ class HeadPoseGeometry:
 
     def __calculate_yaw(self):
         k = 0.703
-        k1 = (self.landmarks[right_ear][y_coord] - self.landmarks[left_ear][y_coord]) \
-             / (self.landmarks[right_ear][x_coord] - self.landmarks[left_ear][x_coord])
+        k1 = slope(self.landmarks[right_ear], self.landmarks[left_ear])
         q1 = self.landmarks[left_eye_left_corner][y_coord] - k1 * self.landmarks[left_eye_left_corner][x_coord]
 
         if k1 == 0:
@@ -56,20 +55,14 @@ class HeadPoseGeometry:
         return yaw
 
     def __calculate_pitch(self):
-        x_eye_corner_dist, y_eye_corner_dist = \
-            per_elem_diff(self.landmarks[right_eye_right_corner], self.landmarks[left_eye_left_corner])
-        x_eye_corner_dist /= 2
-        y_eye_corner_dist /= 2
+        eyes_mid_point = (self.landmarks[right_eye_right_corner] - self.landmarks[left_eye_left_corner]) / 2
 
-        x_mouth_corner_dist, y_mouth_corner_dist = \
-            per_elem_diff(self.landmarks[mouth_right_corner], self.landmarks[mouth_left_corner])
-        x_mouth_corner_dist /= 2
-        y_mouth_corner_dist /= 2
+        mouth_mid_point = (self.landmarks[mouth_right_corner] - self.landmarks[mouth_left_corner]) / 2
 
-        k = (y_eye_corner_dist - y_mouth_corner_dist) / (x_eye_corner_dist - x_mouth_corner_dist)
+        k = slope(eyes_mid_point, mouth_mid_point)
         if k == 0:
             k += 0.00000001
-        q = y_mouth_corner_dist - k * x_mouth_corner_dist
+        q = mouth_mid_point[y_coord] - k * mouth_mid_point[x_coord]
 
         k2 = -1 / k
         q2 = self.landmarks[nose_bridge_tip][y_coord] - k2 * self.landmarks[nose_bridge_tip][x_coord]
@@ -77,8 +70,9 @@ class HeadPoseGeometry:
         x_p = (q2 - q) / (k - k2)
         y_p = k * x_p + q
 
-        if y_eye_corner_dist - y_mouth_corner_dist == 0:
-            y_eye_corner_dist += 0.00000001
+        if eyes_mid_point[y_coord] - mouth_mid_point[y_coord] == 0:
+            eyes_mid_point[y_coord] += 0.00000001
         return np.arctan(
-            ((y_p - y_mouth_corner_dist) / (y_eye_corner_dist - y_mouth_corner_dist) - (3.312 / 7.2)) / (3.75 / 7.2)
+            ((y_p - mouth_mid_point[y_coord]) / (eyes_mid_point[y_coord] - mouth_mid_point[y_coord])
+             - (3.312 / 7.2)) / (3.75 / 7.2)
         )
