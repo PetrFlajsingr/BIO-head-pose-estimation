@@ -58,25 +58,22 @@ class HeadPoseTracker:
         self.landmarks = landmarks_for_face(self.__detector, self.__predictor, gray)
 
         if self.landmarks is not None and len(self.landmarks) != 0:
-            left_eye_left_corner = self.landmarks[36]
-            right_eye_right_corner = self.landmarks[45]
-            nose = self.landmarks[30]
-            if left_eye_left_corner[0] != right_eye_right_corner[0] and left_eye_left_corner[1] != \
-                    right_eye_right_corner[1]:
+            if self.landmarks[left_eye_left_corner][x_coord] != self.landmarks[right_eye_right_corner][x_coord] \
+                    and self.landmarks[left_eye_left_corner][y_coord] != self.landmarks[right_eye_right_corner][y_coord]:
                 self.__roll = np.rad2deg(np.arctan(
-                    (left_eye_left_corner[0] - right_eye_right_corner[0])
-                    / (left_eye_left_corner[1] - right_eye_right_corner[1])))
+                    (self.landmarks[left_eye_left_corner][x_coord] - self.landmarks[right_eye_right_corner][x_coord])
+                    / (self.landmarks[left_eye_left_corner][y_coord] - self.landmarks[right_eye_right_corner][y_coord])))
                 is_negative = self.__roll < 0
                 self.__roll = 90 - abs(self.__roll)
                 if is_negative:
                     self.__roll = -self.__roll
-            self.__yaw += (self.__init_locations['nose'][0] - nose[0]) \
+            self.__yaw += (self.__init_locations['nose'][x_coord] - self.landmarks[nose_bridge_tip][x_coord]) \
                           / self.__init_locations['sphere_circumference'] * 360
-            self.__pitch += (nose[1] - self.__init_locations['nose'][1]) \
+            self.__pitch += (self.landmarks[nose_bridge_tip][y_coord] - self.__init_locations['nose'][y_coord]) \
                             / self.__init_locations['sphere_circumference'] * 360
-            self.__init_locations['left_eye'] = left_eye_left_corner
-            self.__init_locations['right_eye'] = right_eye_right_corner
-            self.__init_locations['nose'] = nose
+            self.__init_locations['left_eye'] = self.landmarks[left_eye_left_corner]
+            self.__init_locations['right_eye'] = self.landmarks[right_eye_right_corner]
+            self.__init_locations['nose'] = self.landmarks[nose_bridge_tip]
             return True
         else:
             return False
