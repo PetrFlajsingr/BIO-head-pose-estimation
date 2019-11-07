@@ -55,7 +55,7 @@ def draw_and_show_landmarks_and_head_pose(landmarks, image, yaw, pitch, roll, in
     cv2.putText(image, 'Roll: {}'.format(roll), (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
     cv2.putText(image, info_text, (10, 120), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
 
-    if not isinstance(yaw, str) and not isinstance(pitch, str) or not isinstance(roll, str):
+    if not isinstance(yaw, str) and not isinstance(pitch, str) and not isinstance(roll, str):
         # Create rotation matrix
         rotation = Rotation.from_euler('yxz', [yaw, pitch, roll], degrees=True)
         rotation_matrix = rotation.as_dcm()
