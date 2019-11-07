@@ -6,6 +6,11 @@ from landmark_recognition import landmarks_for_face
 
 
 class HeadPoseTracker:
+    """
+    Head pose estimation using tracking.
+    Tracking is initialised when face is first detected.
+    Euler angles are computed from person's movement.
+    """
     def __init__(self, detector, predictor):
         self.__detector = detector
         self.__predictor = predictor

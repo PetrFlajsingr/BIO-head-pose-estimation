@@ -7,6 +7,9 @@ from landmark_recognition import landmarks_for_face
 
 
 class HeadPoseModel:
+    """
+    Head pose estimation using 3D model points and PnP.
+    """
     def __init__(self, detector, predictor):
         self.__detector = detector
         self.__predictor = predictor
