@@ -18,7 +18,7 @@ def landmarks_for_face(detector, predictor, image):
             for n in range(0, 68):
                 landmark = np.array([landmarks.part(n).x, landmarks.part(n).y, 1], dtype=np.float)
                 transformed = np.dot(rot_mat, landmark.T)
-                result.append((int(transformed[0]), int(transformed[1])))
+                result.append(transformed)
 
         angle += 10
     return result
