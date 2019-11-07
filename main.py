@@ -2,10 +2,13 @@ import argparse
 
 import cv2
 import dlib
+import numpy as np
+from scipy.spatial.transform import Rotation
 
 from head_pose_geometry import HeadPoseGeometry
 from head_pose_model import HeadPoseModel
 from head_pose_tracker import HeadPoseTracker
+from landmark_constants import *
 
 unknwn = 'unknown'
 landmark_model_path = "models/shape_predictor_68_face_landmarks.dat"
@@ -34,13 +37,34 @@ class MultiHeadPoseEstimator:
         return 'geom: {}, track: {}, model: {}'.format(arg1, arg2, arg3)
 
 
-def draw_and_show_landmarks_and_head_pose(landmarks, image, yaw, pitch, roll, info_text = ''):
+def draw_and_show_landmarks_and_head_pose(landmarks, image, yaw, pitch, roll, info_text=''):
     for pos in landmarks:
         cv2.circle(image, (int(pos[0]), int(pos[1])), 5, (0, 0, 255), -1)
     cv2.putText(image, 'Yaw: {}'.format(yaw), (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
     cv2.putText(image, 'Pitch: {}'.format(pitch), (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
     cv2.putText(image, 'Roll: {}'.format(roll), (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
     cv2.putText(image, info_text, (10, 120), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
+
+    if not isinstance(yaw, str) and not isinstance(pitch, str) or not isinstance(roll, str):
+
+        rotation = Rotation.from_euler('yxz', [yaw, pitch, roll], degrees=True)
+        rotation_matrix = rotation.as_dcm()
+        axis_points = np.float32([[50, 0, 0],
+                                  [0, -50, 0],
+                                  [0, 0, 50],
+                                  ])
+
+        position = np.array([60, image.shape[0] - 60, 0])
+
+        axis = np.zeros((3, 3), dtype=float)
+        axis[0] = np.dot(rotation_matrix, axis_points[0]) + position
+        axis[1] = np.dot(rotation_matrix, axis_points[1]) + position
+        axis[2] = np.dot(rotation_matrix, axis_points[2]) + position
+
+        cv2.line(image, (int(position[0]), int(position[1])), (int(axis[1][0]), int(axis[1][1])), (0, 255, 0), 3)
+        cv2.line(image, (int(position[0]), int(position[1])), (int(axis[0][0]), int(axis[0][1])), (255, 0, 0), 3)
+        cv2.line(image, (int(position[0]), int(position[1])), (int(axis[2][0]), int(axis[2][1])), (0, 0, 255), 3)
+
     cv2.imshow('Out', image)
 
 
@@ -100,7 +124,8 @@ def video_estimation(method, file_path=0):
                                                       "Using {}.".format(head_pose_estimator.get_name()))
             else:
                 draw_and_show_landmarks_and_head_pose([], frame, unknwn, unknwn, unknwn,
-                                                      "Using {}. Face not found.".format(head_pose_estimator.get_name()))
+                                                      "Using {}. Face not found.".format(
+                                                          head_pose_estimator.get_name()))
             input = cv2.waitKey(20) & 0xFF
             if input == ord('q'):
                 break
@@ -140,4 +165,3 @@ elif args.input_type == 'video':
     video_estimation(args.method, args.path)
 elif args.input_type == 'image':
     pose_estimation(args.method, args.path)
-
