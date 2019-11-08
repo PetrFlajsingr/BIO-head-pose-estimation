@@ -8,7 +8,6 @@ from scipy.spatial.transform import Rotation
 from head_pose_geometry import HeadPoseGeometry
 from head_pose_model import HeadPoseModel
 from head_pose_tracker import HeadPoseTracker
-from landmark_constants import *
 
 unknwn = 'unknown'
 landmark_model_path = "models/shape_predictor_68_face_landmarks.dat"
@@ -100,6 +99,11 @@ parser.add_argument('-m',
                     choices=[0, 1, 2],
                     type=int,
                     default=0)
+parser.add_argument('-eval',
+                    action='store_true',
+                    dest='evaluate',
+                    help='Print result of roll, yaw pitch to stdout for evaluation purpose',
+                    default=False)
 args = parser.parse_args()
 
 if args.input_type != 'camera' and args.path is None:
@@ -132,7 +136,10 @@ def video_estimation(method, file_path=0):
         if ret:
             success, yaw, pitch, roll = head_pose_estimator.pose_for_image(frame)
             if success:
-                draw_and_show_landmarks_and_head_pose(head_pose_estimator.landmarks, frame, yaw, pitch, roll,
+                if args.evaluate:
+                    print(roll, "\t", yaw, "\t", pitch)
+                else:
+                    draw_and_show_landmarks_and_head_pose(head_pose_estimator.landmarks, frame, yaw, pitch, roll,
                                                       "Using {}.".format(head_pose_estimator.get_name()))
             else:
                 draw_and_show_landmarks_and_head_pose([], frame, unknwn, unknwn, unknwn,
@@ -164,7 +171,9 @@ def pose_estimation(method, file_path):
         raise Exception("Invalid method:{}".format(method))
 
     success, yaw, pitch, roll = head_pose_estimator.pose_for_image(img)
-    if success:
+    if success and args.evaluate:
+        print(roll, "\t", yaw, "\t", pitch)
+    elif success:
         draw_and_show_landmarks_and_head_pose(head_pose_estimator.landmarks, img, yaw, pitch, roll)
     else:
         draw_and_show_landmarks_and_head_pose([], img, unknwn, unknwn, unknwn, 'Face not found.')
