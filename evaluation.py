@@ -3,7 +3,7 @@ import argparse
 import numpy as np
 
 
-class angles:
+class EulerAngles:
     """
     Class for storing angles
     """
@@ -38,12 +38,12 @@ files = list(filter(lambda x: x.endswith('.mp4'), os.listdir(args.path)))
 files.sort()
 
 files = files[:2]
-all_angles = [angles(), angles(), angles()]
+all_angles = [EulerAngles(), EulerAngles(), EulerAngles()]
 all_computed_data = [[], [], []]
 
 for video_file in files:
     print("Evaluating file: ", video_file)
-    current_angles = [angles(), angles(), angles()]
+    current_angles = [EulerAngles(), EulerAngles(), EulerAngles()]
     data_file = video_file.replace(".mp4", "_groundtruth3D.txt")  # reference file
     with open("{}/{}".format(args.path, data_file)) as file:  # load data
         raw_data = file.read()
@@ -59,13 +59,14 @@ for video_file in files:
         all_computed_data[method] = all_computed_data[
                                         method] + data  # append to complete data for deviation computation
         data_length = len(data)
-        for line_index in range(data_length): #sum differences of angles between ground truth and our result in current file
+        # sum differences of angles between ground truth and our result in current file
+        for line_index in range(data_length):
             current_angles[method].roll += abs(float(data[line_index][0]) - float(truth_data[line_index][3]))
             current_angles[method].yaw += abs(float(data[line_index][1]) - float(truth_data[line_index][4]))
             current_angles[method].pitch += abs(float(data[line_index][2]) - float(truth_data[line_index][5]))
         current_angles[method].div(data_length)
 
-        all_angles[method].add(current_angles[method]) #sum of differences across all files
+        all_angles[method].add(current_angles[method])  # sum of differences across all files
 
         print("Average error for method ", method, ":\n\tRoll: ", current_angles[method].roll, "\n\tYaw: ",
               current_angles[method].yaw, "\n\tPitch: ",
