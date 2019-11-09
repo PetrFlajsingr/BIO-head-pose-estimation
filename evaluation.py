@@ -72,7 +72,6 @@ args = parser.parse_args()
 files = list(filter(lambda x: x.endswith('.mp4'), os.listdir(args.path)))
 files.sort()
 
-files = files[:2]
 all_angles = [EulerAngles(), EulerAngles(), EulerAngles()]
 all_computed_data = [[], [], []]
 
