@@ -46,6 +46,11 @@ def draw_and_show_landmarks_and_head_pose(landmarks, image, yaw='unknown', pitch
         axis[1] = np.dot(rotation_matrix, axis_points[1]) + position
         axis[2] = np.dot(rotation_matrix, axis_points[2]) + position
 
+        cv2.rectangle(image,
+                      (0, image.shape[0] - 120),
+                      (120, image.shape[0]),
+                      (255, 255, 255),
+                      -1)
         cv2.line(image, (int(position[0]), int(position[1])), (int(axis[1][0]), int(axis[1][1])), (0, 255, 0), 3)
         cv2.line(image, (int(position[0]), int(position[1])), (int(axis[0][0]), int(axis[0][1])), (255, 0, 0), 3)
         cv2.line(image, (int(position[0]), int(position[1])), (int(axis[2][0]), int(axis[2][1])), (0, 0, 255), 3)
