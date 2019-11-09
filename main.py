@@ -56,7 +56,7 @@ def draw_and_show_landmarks_and_head_pose(landmarks, image, yaw, pitch, roll, in
 
     if not isinstance(yaw, str) and not isinstance(pitch, str) and not isinstance(roll, str):
         # Create rotation matrix
-        rotation = Rotation.from_euler('yxz', [yaw, pitch, roll], degrees=True)
+        rotation = Rotation.from_euler('yxz', [-yaw, pitch, roll], degrees=True)
         rotation_matrix = rotation.as_dcm()
         # offsets to axis end-points
         axis_points = np.float32([[50, 0, 0],
@@ -140,7 +140,7 @@ def video_estimation(method, file_path=0):
                     print(roll, "\t", yaw, "\t", pitch)
                 else:
                     draw_and_show_landmarks_and_head_pose(head_pose_estimator.landmarks, frame, yaw, pitch, roll,
-                                                      "Using {}.".format(head_pose_estimator.get_name()))
+                                                          "Using {}.".format(head_pose_estimator.get_name()))
             else:
                 draw_and_show_landmarks_and_head_pose([], frame, unknwn, unknwn, unknwn,
                                                       "Using {}. Face not found.".format(
