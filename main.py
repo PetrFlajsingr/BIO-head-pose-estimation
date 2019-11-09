@@ -36,7 +36,7 @@ class MultiHeadPoseEstimator:
         return 'geom: {}, track: {}, model: {}'.format(arg1, arg2, arg3)
 
 
-def draw_and_show_landmarks_and_head_pose(landmarks, image, yaw, pitch, roll, info_text=''):
+def draw_and_show_landmarks_and_head_pose(landmarks, image, yaw='unknown', pitch='unknown', roll='unknown', info_text=''):
     """
     Draws angle and landmarks info into image and shows it
     :param landmarks: Points of interest in face
@@ -142,8 +142,7 @@ def video_estimation(method, file_path=0):
                     draw_and_show_landmarks_and_head_pose(head_pose_estimator.landmarks, frame, yaw, pitch, roll,
                                                           "Using {}.".format(head_pose_estimator.get_name()))
             else:
-                draw_and_show_landmarks_and_head_pose([], frame, unknwn, unknwn, unknwn,
-                                                      "Using {}. Face not found.".format(
+                draw_and_show_landmarks_and_head_pose([], frame, info_text="Using {}. Face not found.".format(
                                                           head_pose_estimator.get_name()))
             input = cv2.waitKey(20) & 0xFF
             if input == ord('q'):
@@ -176,7 +175,7 @@ def pose_estimation(method, file_path):
     elif success:
         draw_and_show_landmarks_and_head_pose(head_pose_estimator.landmarks, img, yaw, pitch, roll)
     else:
-        draw_and_show_landmarks_and_head_pose([], img, unknwn, unknwn, unknwn, 'Face not found.')
+        draw_and_show_landmarks_and_head_pose([], img, info_text='Face not found.')
     cv2.waitKey()
 
 
