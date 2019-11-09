@@ -8,6 +8,7 @@ from head_pose_model import HeadPoseModel
 from head_pose_multi import MultiHeadPoseEstimator
 from head_pose_tracker import HeadPoseTracker
 from image_utils import draw_and_show_landmarks_and_head_pose
+from landmark_recognition import landmarks_for_face
 
 landmark_model_path = "models/shape_predictor_68_face_landmarks.dat"
 
@@ -64,6 +65,9 @@ def get_estimator(method, detector, predictor):
     return head_pose_estimator
 
 
+
+
+
 def video_estimation(method, file_path=0):
     """
     Head pose estimation for video input {video file, camera}
@@ -79,16 +83,17 @@ def video_estimation(method, file_path=0):
     while cap.isOpened():
         ret, frame = cap.read()
         if ret:
-            success, yaw, pitch, roll = head_pose_estimator.pose_for_image(frame)
-            if success:
+            landmarks = landmarks_for_face(detector, predictor, frame)
+            if len(landmarks) == 0 or landmarks is None:
+                draw_and_show_landmarks_and_head_pose([], frame, info_text="Using {}. Face not found.".format(
+                    head_pose_estimator.get_name()))
+            else:
+                yaw, pitch, roll = head_pose_estimator.pose_for_landmarks(frame, landmarks)
                 if args.evaluate:
                     print(roll, "\t", yaw, "\t", pitch)
                 else:
                     draw_and_show_landmarks_and_head_pose(head_pose_estimator.landmarks, frame, yaw, pitch, roll,
                                                           "Using {}.".format(head_pose_estimator.get_name()))
-            else:
-                draw_and_show_landmarks_and_head_pose([], frame, info_text="Using {}. Face not found.".format(
-                                                          head_pose_estimator.get_name()))
             input = cv2.waitKey(20) & 0xFF
             if input == ord('q'):
                 break

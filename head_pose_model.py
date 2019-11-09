@@ -3,39 +3,31 @@ import math
 import numpy as np
 
 from landmark_constants import *
-from landmark_recognition import landmarks_for_face
 
 
 class HeadPoseModel:
     """
     Head pose estimation using 3D model points and PnP.
     """
-    def __init__(self, detector, predictor):
-        self.__detector = detector
-        self.__predictor = predictor
+    def __init__(self):
         self.landmarks = []
 
     def get_name(self):
         return "3D model"
 
-    def pose_for_image(self, image):
-        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        self.landmarks = landmarks_for_face(self.__detector, self.__predictor, gray)
+    def pose_for_landmarks(self, image, landmarks):
+        self.landmarks = landmarks
+        selected_landmarks = np.array(
+            [self.landmarks[nose_bridge_tip],
+             self.landmarks[center_chin],
+             self.landmarks[left_eye_left_corner],
+             self.landmarks[right_eye_right_corner],
+             self.landmarks[mouth_left_corner],
+             self.landmarks[mouth_right_corner]], dtype="double")
 
-        if self.landmarks is not None and len(self.landmarks) != 0:
-            selected_landmarks = np.array(
-                [self.landmarks[nose_bridge_tip],
-                 self.landmarks[center_chin],
-                 self.landmarks[left_eye_left_corner],
-                 self.landmarks[right_eye_right_corner],
-                 self.landmarks[mouth_left_corner],
-                 self.landmarks[mouth_right_corner]], dtype="double")
+        axis_points, rotate_degree = self.__match_with_model(image.shape, selected_landmarks)
 
-            axis_points, rotate_degree = self.__match_with_model(image.shape, selected_landmarks)
-
-            return True, rotate_degree[2], rotate_degree[1], rotate_degree[0]
-        else:
-            return False, 0.0, 0.0, 0.0
+        return rotate_degree[2], rotate_degree[1], rotate_degree[0]
 
     @staticmethod
     def __match_with_model(image_shape, image_points):

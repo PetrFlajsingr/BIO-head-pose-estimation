@@ -10,24 +10,18 @@ class HeadPoseGeometry:
     """
     Head pose estimation using geometry.
     """
-    def __init__(self, detector, predictor):
-        self.__detector = detector
-        self.__predictor = predictor
+    def __init__(self):
         self.landmarks = []
 
     def get_name(self):
         return "geometry"
 
-    def pose_for_image(self, image):
-        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        self.landmarks = landmarks_for_face(self.__detector, self.__predictor, gray)
-        if self.landmarks is not None and len(self.landmarks) != 0:
-            roll = np.rad2deg(self.__calculate_roll())
-            yaw = np.rad2deg(self.__calculate_yaw())
-            pitch = np.rad2deg(self.__calculate_pitch())
-            return True, yaw, pitch, roll
-        else:
-            return False, 0.0, 0.0, 0.0
+    def pose_for_landmarks(self, image, landmarks):
+        self.landmarks = landmarks
+        roll = np.rad2deg(self.__calculate_roll())
+        yaw = np.rad2deg(self.__calculate_yaw())
+        pitch = np.rad2deg(self.__calculate_pitch())
+        return yaw, pitch, roll
 
     def __calculate_roll(self):
         return np.arctan((self.landmarks[right_eye_right_corner][y_coord] - self.landmarks[left_eye_left_corner][y_coord])
