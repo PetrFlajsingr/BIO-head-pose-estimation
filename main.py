@@ -112,6 +112,12 @@ if args.input_type != 'camera' and args.path is None:
 
 
 def get_estimator(method, detector, predictor):
+    """
+    Factory method for head pose estimators
+    :param method: method to estimate with {0, 1, 2} - {3D model, tracking, geometry}
+    :param detector: face detector
+    :param predictor: landmark detector
+    """
     if method == 0:
         head_pose_estimator = HeadPoseModel(detector, predictor)
     elif method == 1:
@@ -126,6 +132,12 @@ def get_estimator(method, detector, predictor):
 
 
 def video_estimation(method, file_path=0):
+    """
+    Head pose estimation for video input {video file, camera}
+    :param method: method to estimate with {0, 1, 2} - {3D model, tracking, geometry}
+    :param file_path: path to source video file, int for chosen camera input
+    :return:
+    """
     cap = cv2.VideoCapture(file_path)
     detector = dlib.get_frontal_face_detector()
     predictor = dlib.shape_predictor(landmark_model_path)
@@ -156,6 +168,11 @@ def video_estimation(method, file_path=0):
 
 
 def pose_estimation(method, file_path):
+    """
+    Head pose estimation for single image
+    :param method: method to estimate with {0, 1, 2} - {3D model, tracking, geometry}
+    :param file_path: path to source image
+    """
     detector = dlib.get_frontal_face_detector()
     predictor = dlib.shape_predictor(landmark_model_path)
     img = cv2.imread(file_path)
