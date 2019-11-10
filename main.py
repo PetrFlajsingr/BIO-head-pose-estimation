@@ -115,16 +115,17 @@ def pose_estimation(method, file_path):
     predictor = dlib.shape_predictor(landmark_model_path)
     img = cv2.imread(file_path)
     if method == 0:
-        head_pose_estimator = HeadPoseModel(detector, predictor)
+        head_pose_estimator = HeadPoseModel()
     elif method == 1:
         print('Method 1 is unusable for images.')
         return
     elif method == 2:
-        head_pose_estimator = HeadPoseGeometry(detector, predictor)
+        head_pose_estimator = HeadPoseGeometry()
     else:
         raise Exception("Invalid method:{}".format(method))
 
-    success, yaw, pitch, roll = head_pose_estimator.pose_for_image(img)
+    landmarks = landmarks_for_face(detector, predictor, img)
+    success, yaw, pitch, roll = head_pose_estimator.pose_for_landmarks(img, landmarks)
     if success and args.evaluate:
         print(roll, "\t", yaw, "\t", pitch)
     elif success:
