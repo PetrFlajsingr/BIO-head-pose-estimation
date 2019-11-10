@@ -48,18 +48,8 @@ def eval(method, file_path, n):
     return end - start
 
 
-total0 = 0
-total1 = 0
-total2 = 0
-totalN = 0
-for i in range(100):
-    N = 100000
-    total0 += eval(0, args.path, N)
-    total1 += eval(1, args.path, N)
-    total2 += eval(2, args.path, N)
-    totalN += N
-print("Method:", 0, "Took:", total0, "Avg:", total0 / totalN)
-print("Method:", 1, "Took:", total1, "Avg:", total1 / totalN)
-print("Method:", 2, "Took:", total2, "Avg:", total2 / totalN)
-
+N = 100000
+eval(0, args.path, N)
+eval(1, args.path, N)
+eval(2, args.path, N)
 
