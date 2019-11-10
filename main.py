@@ -125,7 +125,8 @@ def pose_estimation(method, file_path):
         raise Exception("Invalid method:{}".format(method))
 
     landmarks = landmarks_for_face(detector, predictor, img)
-    success, yaw, pitch, roll = head_pose_estimator.pose_for_landmarks(img, landmarks)
+    success = len(landmarks) and landmarks is not None
+    yaw, pitch, roll = head_pose_estimator.pose_for_landmarks(img, landmarks)
     if success and args.evaluate:
         print(roll, "\t", yaw, "\t", pitch)
     elif success:
