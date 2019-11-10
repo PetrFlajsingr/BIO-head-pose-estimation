@@ -61,11 +61,11 @@ parser.add_argument('-p',
                     help='path to input folder',
                     required=True,
                     type=str)
-parser.add_argument('-graph',
+parser.add_argument('-o',
                     action='store',
-                    dest='graph_path',
-                    help='path for graph output',
-                    default='',
+                    dest='out_path',
+                    help='path for output',
+                    required=True,
                     type=str)
 args = parser.parse_args()
 
@@ -78,70 +78,81 @@ all_computed_data = [[], [], []]
 detectors = [HeadPoseModel(), HeadPoseTracker(), HeadPoseGeometry()]
 
 
-if len(args.graph_path) != 0 and not os.path.exists(args.graph_path):
-    os.mkdir(args.graph_path)
+if len(args.out_path) != 0 and not os.path.exists(args.out_path):
+    os.mkdir(args.out_path)
 
-for video_file in files:
-    print("Evaluating file: ", video_file)
-    current_angles = [EulerAngles(), EulerAngles(), EulerAngles()]
-    data_file = video_file.replace(".mp4", "_groundtruth3D.txt")  # reference file
-    with open("{}/{}".format(args.path, data_file)) as file:  # load data
-        raw_data = file.read()
-        rows = raw_data.split('\n')
-        rows = rows[:-1]
-        truth_data = [row.split('\t') for row in rows]
+with open('{}/{}.txt'.format(args.out_path, 'stats'), 'w') as out_file:
 
-    for method in range(3):  # run detection for each method
-        detector = detectors[method]
-        angles = angles_for_video(detector, "{}/{}".format(args.path, video_file))
+    for video_file in files:
+        print("Evaluating file: ", video_file)
+        current_angles = [EulerAngles(), EulerAngles(), EulerAngles()]
+        data_file = video_file.replace(".mp4", "_groundtruth3D.txt")  # reference file
+        with open("{}/{}".format(args.path, data_file)) as file:  # load data
+            raw_data = file.read()
+            rows = raw_data.split('\n')
+            rows = rows[:-1]
+            truth_data = [row.split('\t') for row in rows]
 
-        all_computed_data[method] = all_computed_data[
-                                        method] + angles  # append to complete data for deviation computation
-        data_length = len(angles)
-        # sum differences of angles between ground truth and our result in current file
-        for line_index in range(data_length):
-            current_angles[method].roll += abs(float(angles[line_index].roll) - float(truth_data[line_index][3]))
-            current_angles[method].yaw += abs(float(angles[line_index].yaw) - float(truth_data[line_index][4]))
-            current_angles[method].pitch += abs(float(angles[line_index].pitch) - float(truth_data[line_index][5]))
-        current_angles[method].div(data_length)
+        for method in range(3):  # run detection for each method
+            detector = detectors[method]
+            angles = angles_for_video(detector, "{}/{}".format(args.path, video_file))
 
-        all_angles[method].add(current_angles[method])  # sum of differences across all files
+            all_computed_data[method] = all_computed_data[
+                                            method] + angles  # append to complete data for deviation computation
+            data_length = len(angles)
+            # sum differences of angles between ground truth and our result in current file
+            for line_index in range(data_length):
+                current_angles[method].roll += abs(float(angles[line_index].roll) - float(truth_data[line_index][3]))
+                current_angles[method].yaw += abs(float(angles[line_index].yaw) - float(truth_data[line_index][4]))
+                current_angles[method].pitch += abs(float(angles[line_index].pitch) - float(truth_data[line_index][5]))
+            current_angles[method].div(data_length)
 
-        print("Average error for method ", method, ":\n\tRoll: ", current_angles[method].roll, "\n\tYaw: ",
-              current_angles[method].yaw, "\n\tPitch: ",
-              current_angles[method].pitch)
+            all_angles[method].add(current_angles[method])  # sum of differences across all files
+            print("Average error for method ", method, ":\n\tRoll: ", current_angles[method].roll, "\n\tYaw: ",
+                  current_angles[method].yaw, "\n\tPitch: ",
+                  current_angles[method].pitch)
+            out_file.write("Average error for method " + str(method) + ":\n\tRoll: " + str(current_angles[method].roll) + "\n\tYaw: " +
+                  str(current_angles[method].yaw) + "\n\tPitch: " +
+                  str(current_angles[method].pitch))
 
-        if len(args.graph_path) != 0:
             correct_yaw = [v[4] for v in truth_data]
             if method == 0:
                 estimated_yaw = [-v.yaw for v in angles]
+            elif method == 2:
+                estimated_yaw = [-v.yaw for v in angles]
             else:
-                estimated_yaw = [v.yaw for v in angles]
-            create_plot(correct_yaw, estimated_yaw, args.graph_path, video_file[:-4] + "yaw" + detector.get_name())
+                estimated_yaw = [-v.yaw for v in angles]
+            create_plot(correct_yaw, estimated_yaw, args.out_path, "{}_{}_{}".format(detector.get_name(), "yaw", video_file[:-4]))
 
             correct_pitch = [v[5] for v in truth_data]
-            estimated_pitch = [v.pitch for v in angles]
-            create_plot(correct_pitch, estimated_pitch, args.graph_path, video_file[:-4] + "pitch" + detector.get_name())
+
+            if method == 0:
+                estimated_pitch = [-(v.pitch - 10) for v in angles]
+            elif method == 2:
+                estimated_pitch = [-(v.pitch - 15) for v in angles]
+            else:
+                estimated_pitch = [-(v.pitch - 15) for v in angles]
+            create_plot(correct_pitch, estimated_pitch, args.out_path, "{}_{}_{}".format(detector.get_name(), "pitch", video_file[:-4]))
 
             correct_roll = [v[3] for v in truth_data]
             estimated_roll = [v.roll for v in angles]
-            create_plot(correct_roll, estimated_roll, args.graph_path, video_file[:-4] + "roll" + detector.get_name())
+            create_plot(correct_roll, estimated_roll, args.out_path, "{}_{}_{}".format(detector.get_name(), "roll", video_file[:-4]))
 
-print("------------------------------------------------------------------------------------------------")
-all_computed_data = np.array([v.as_nparray for v in all_computed_data], dtype=float)
-for method in range(3):
-    all_angles[method].div(len(files))
-    # compute deviation across all files
-    all_computed_data[method] = np.subtract(all_computed_data[method], all_angles[method].as_nparray())
-    all_computed_data[method] = np.power(all_computed_data[method], 2)
-    deviation = np.sum(all_computed_data[method], axis=0)
-    deviation /= (all_computed_data[method].shape[0] - 1)
-    deviation = np.sqrt(deviation)
-    print("METHOD ", method)
-    print("Complete error:", method, ":\n\tRoll: ", all_angles[method].roll, "\n\tYaw: ",
-          all_angles[method].yaw, "\n\tPitch: ",
-          all_angles[method].pitch)
-    print("Complete deviation:", method, ":\n\tRoll: ", deviation[0], "\n\tYaw: ",
-          deviation[1], "\n\tPitch: ",
-          deviation[2])
-print("------------------------------------------------------------------------------------------------")
+    print("------------------------------------------------------------------------------------------------")
+    all_computed_data = np.array([v for v in all_computed_data], dtype=float)
+    for method in range(3):
+        all_angles[method].div(len(files))
+        # compute deviation across all files
+        all_computed_data[method] = np.subtract(all_computed_data[method], all_angles[method].as_nparray())
+        all_computed_data[method] = np.power(all_computed_data[method], 2)
+        deviation = np.sum(all_computed_data[method], axis=0)
+        deviation /= (all_computed_data[method].shape[0] - 1)
+        deviation = np.sqrt(deviation)
+        print("METHOD ", method)
+        print("Complete error:", method, ":\n\tRoll: ", all_angles[method].roll, "\n\tYaw: ",
+              all_angles[method].yaw, "\n\tPitch: ",
+              all_angles[method].pitch)
+        print("Complete deviation:", method, ":\n\tRoll: ", deviation[0], "\n\tYaw: ",
+              deviation[1], "\n\tPitch: ",
+              deviation[2])
+    print("------------------------------------------------------------------------------------------------")
