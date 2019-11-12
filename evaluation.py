@@ -60,6 +60,12 @@ def angle_correction(angle, a, b):
 
 
 def print_and_write(file, text):
+    """
+    Prints text that is than written into file
+    :param file: output file to write to
+    :param text: string to write and print
+    :return:
+    """
     print(text)
     file.write(text)
     file.write("\n")
@@ -82,7 +88,7 @@ args = parser.parse_args()
 
 files = list(filter(lambda x: x.endswith('.mp4'), os.listdir(args.path)))
 files.sort()
-files = [files[6]]
+files = [files[0]]
 
 all_angles = [EulerAngles(), EulerAngles(), EulerAngles()]
 all_differences = [[], [], []]
@@ -123,11 +129,12 @@ with open('{}/{}.txt'.format(args.out_path, 'stats'), 'w') as out_file:
                 current_angles[method].roll += abs(roll_diff)
                 current_angles[method].yaw += abs(yaw_diff)
                 current_angles[method].pitch += abs(pitch_diff)
-                all_differences[method].append([roll_diff, yaw_diff, pitch_diff])
+                all_differences[method].append(
+                    [roll_diff, yaw_diff, pitch_diff])  # save values to all differences for deviation computaion
 
             current_angles[method].div(data_length)
 
-            all_angles[method].add(current_angles[method])  # sum of differences across all files
+            all_angles[method].add(current_angles[method])  # sum of partial averages of error across all files
             print_and_write(out_file,
                             "Average error for method {}:\n\tRoll: {} \n\tYaw: {} \n\tPitch: {}".format(method,
                                                                                                         current_angles[
@@ -168,14 +175,15 @@ with open('{}/{}.txt'.format(args.out_path, 'stats'), 'w') as out_file:
     print_and_write(out_file, "*RESULT*")
     all_differences = np.array(all_differences, dtype=float)
     for method in range(3):
+        all_angles[method].div(len(files))  # div by file count to get complete avg from partial avgs
         record_count = all_differences[method].shape[0]
-        avg = np.sum(all_differences[method], axis=0) / record_count
+        avg = np.sum(all_differences[method], axis=0) / record_count  # non-absolute avg for deviation
         # compute deviation across all files
-        diff = np.subtract(all_differences[method], avg)
-        sq_diff = np.power(diff, 2)
-        sq_diff_sum = np.sum(sq_diff, axis=0)
-        deviation = sq_diff_sum / record_count
-        deviation = np.sqrt(deviation)
+        diff = np.subtract(all_differences[method], avg)  # (xi - avg)
+        sq_diff = np.power(diff, 2)  # (xi - avg)^2
+        sq_diff_sum = np.sum(sq_diff, axis=0)  # Σ(xi - avg)^2
+        deviation = sq_diff_sum / record_count  # (Σ(xi - avg)^2) / N
+        deviation = np.sqrt(deviation)  # sqrt((Σ(xi - avg)^2) / N) = sigma (standard deviation)
         print_and_write(out_file, "METHOD {}".format(method))
         print_and_write(out_file, "Complete error:{} :\n\tRoll: {} \n\tYaw: {} \n\tPitch: {}".format(method, all_angles[
             method].roll, all_angles[method].yaw, all_angles[method].pitch))
