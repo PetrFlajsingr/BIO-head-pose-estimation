@@ -49,7 +49,7 @@ class HeadPoseTracker:
                          - self.landmarks[right_eye_right_corner][x_coord], 2)
                 + np.power(self.landmarks[left_eye_left_corner][y_coord]
                            - self.landmarks[right_eye_right_corner][y_coord], 2))
-            self.__init_locations['sphere_radius'] = eye_distance * eye_distance_tohead_depth_ratio / 2
+            self.__init_locations['sphere_radius'] = eye_distance * eye_distance_tohead_depth_ratio
             self.__init_locations['sphere_circumference'] = np.pi * 2 * self.__init_locations['sphere_radius']
             self.__is_initialised = True
         else:
@@ -65,10 +65,10 @@ class HeadPoseTracker:
             self.__roll = 90 - abs(self.__roll)
             if is_negative:
                 self.__roll = -self.__roll
-        self.__yaw += np.arctan((self.__init_locations['nose'][x_coord] - self.landmarks[nose_bridge_tip][x_coord])
-                                / self.__init_locations['sphere_radius'])
-        self.__pitch -= np.arctan((self.landmarks[nose_bridge_tip][y_coord] - self.__init_locations['nose'][y_coord])
-                                  / self.__init_locations['sphere_radius'])
+        self.__yaw += np.rad2deg(np.arctan((self.__init_locations['nose'][x_coord] - self.landmarks[nose_bridge_tip][x_coord])
+                                / self.__init_locations['sphere_radius']))
+        self.__pitch -= np.rad2deg(np.arctan((self.landmarks[nose_bridge_tip][y_coord] - self.__init_locations['nose'][y_coord])
+                                  / self.__init_locations['sphere_radius']))
         self.__init_locations['left_eye'] = self.landmarks[left_eye_left_corner]
         self.__init_locations['right_eye'] = self.landmarks[right_eye_right_corner]
         self.__init_locations['nose'] = self.landmarks[nose_bridge_tip]

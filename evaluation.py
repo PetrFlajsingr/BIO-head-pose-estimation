@@ -88,7 +88,8 @@ args = parser.parse_args()
 
 files = list(filter(lambda x: x.endswith('.mp4'), os.listdir(args.path)))
 files.sort()
-files = [files[0]]
+
+files = files[4:]
 
 all_angles = [EulerAngles(), EulerAngles(), EulerAngles()]
 all_differences = [[], [], []]
@@ -109,7 +110,8 @@ with open('{}/{}.txt'.format(args.out_path, 'stats'), 'w') as out_file:
             rows = rows[:-1]
             truth_data = [row.split('\t') for row in rows]
 
-        for method in range(3):  # run detection for each method
+        detectors[1].reset()
+        for method in range(1, 2):  # run detection for each method
             detector = detectors[method]
             angles = angles_for_video(detector, "{}/{}".format(args.path, video_file))
 
