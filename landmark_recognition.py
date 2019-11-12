@@ -5,6 +5,13 @@ from image_utils import rotate_image
 
 
 def landmarks_for_face(detector, predictor, image):
+    """
+    Detects and corrects landmarks for faces
+    :param detector: Face detector
+    :param predictor: landmarks detector
+    :param image: Image with face to detect
+    :return: landmarks of face
+    """
     angle = 0
     faces = []
     result = []

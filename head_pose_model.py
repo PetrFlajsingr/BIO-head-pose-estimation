@@ -25,9 +25,9 @@ class HeadPoseModel:
              self.landmarks[mouth_left_corner],
              self.landmarks[mouth_right_corner]], dtype="double")
 
-        axis_points, rotate_degree = self.__match_with_model(image.shape, selected_landmarks)
+        roll, pitch, yaw = self.__match_with_model(image.shape, selected_landmarks)
 
-        return rotate_degree[2], rotate_degree[1], rotate_degree[0]
+        return yaw, pitch, roll
 
     @staticmethod
     def __match_with_model(image_shape, image_points):
@@ -35,7 +35,7 @@ class HeadPoseModel:
             Computes face rotation from unrotated default 3D model
             :param image_shape: size of image with face
             :param image_points: self.landmarks on face in order (nose, chin, left eye corner, right eye right, left mouth corner, right mouth corner)
-            :return: rotation axis to draw to image and tuple of roll, pitch, yaw
+            :return: angles for roll, pitch, yaw
 
             """
 
@@ -59,12 +59,6 @@ class HeadPoseModel:
         distorsion = np.zeros((4, 1))
         (success, rotation_vector, translation_vector) = cv2.solvePnP(model_3d, image_points, camera_matrix,
                                                                       distorsion, flags=cv2.SOLVEPNP_ITERATIVE)
-        # axis to draw into image
-        axis = np.float32([[500, 0, 0],
-                           [0, 500, 0],
-                           [0, 0, 500]])
-        axis_points = cv2.projectPoints(axis, rotation_vector, translation_vector, camera_matrix, distorsion)[0]
-
         rvecs = cv2.Rodrigues(rotation_vector)[0]
 
         proj_matrix = np.hstack((rvecs, translation_vector))
@@ -76,4 +70,4 @@ class HeadPoseModel:
         roll = math.degrees(math.asin(math.sin(roll)))
         yaw = math.degrees(math.asin(math.sin(yaw)))
 
-        return axis_points, (roll, pitch, yaw)
+        return roll, pitch, yaw

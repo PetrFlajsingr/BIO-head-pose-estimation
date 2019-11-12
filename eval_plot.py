@@ -3,7 +3,7 @@ import numpy as np
 
 
 def create_plot(correct_data, detected_data, path_to_save, name):
-    assert(len(correct_data) == len(detected_data))
+    assert (len(correct_data) == len(detected_data))
     x_axis = np.linspace(0, 1, len(correct_data))
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=x_axis, y=correct_data, mode='lines', name='Expected'))
