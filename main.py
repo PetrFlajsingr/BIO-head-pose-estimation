@@ -53,13 +53,13 @@ def get_estimator(method, detector, predictor):
     :param predictor: landmark detector
     """
     if method == 0:
-        head_pose_estimator = HeadPoseModel(detector, predictor)
+        head_pose_estimator = HeadPoseModel()
     elif method == 1:
-        head_pose_estimator = HeadPoseTracker(detector, predictor)
+        head_pose_estimator = HeadPoseTracker()
     elif method == 2:
-        head_pose_estimator = HeadPoseGeometry(detector, predictor)
+        head_pose_estimator = HeadPoseGeometry()
     elif method == 3:
-        head_pose_estimator = MultiHeadPoseEstimator(detector, predictor)
+        head_pose_estimator = MultiHeadPoseEstimator()
     else:
         raise Exception("Invalid method:{}".format(method))
     return head_pose_estimator
