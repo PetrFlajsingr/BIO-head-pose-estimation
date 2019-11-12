@@ -9,6 +9,7 @@ class HeadPoseTracker:
     Tracking is initialised when face is first detected.
     Euler angles are computed from person's movement.
     """
+
     def __init__(self):
         self.__is_initialised = False
         self.__yaw = 0.0
@@ -64,10 +65,10 @@ class HeadPoseTracker:
             self.__roll = 90 - abs(self.__roll)
             if is_negative:
                 self.__roll = -self.__roll
-        self.__yaw += (self.__init_locations['nose'][x_coord] - self.landmarks[nose_bridge_tip][x_coord]) \
-                      / self.__init_locations['sphere_circumference'] * 360
-        self.__pitch -= (self.landmarks[nose_bridge_tip][y_coord] - self.__init_locations['nose'][y_coord]) \
-                        / self.__init_locations['sphere_circumference'] * 360
+        self.__yaw += np.arctan((self.__init_locations['nose'][x_coord] - self.landmarks[nose_bridge_tip][x_coord])
+                                / self.__init_locations['sphere_radius'])
+        self.__pitch -= np.arctan((self.landmarks[nose_bridge_tip][y_coord] - self.__init_locations['nose'][y_coord])
+                                  / self.__init_locations['sphere_radius'])
         self.__init_locations['left_eye'] = self.landmarks[left_eye_left_corner]
         self.__init_locations['right_eye'] = self.landmarks[right_eye_right_corner]
         self.__init_locations['nose'] = self.landmarks[nose_bridge_tip]
