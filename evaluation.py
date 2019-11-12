@@ -31,7 +31,9 @@ class EulerAngles:
     def as_nparray(self):
         return np.array([self.roll, self.yaw, self.pitch])
 
+
 landmark_model_path = "models/shape_predictor_68_face_landmarks.dat"
+
 
 def angles_for_video(estimator, path):
     cap = cv2.VideoCapture(path)
@@ -53,6 +55,15 @@ def angles_for_video(estimator, path):
     return result
 
 
+def angle_correction(angle, a, b):
+    return np.arctan(a / b) + angle
+
+
+def print_and_write(file, text):
+    print(text)
+    file.write(text)
+    file.write("\n")
+
 
 parser = argparse.ArgumentParser(description='Evaluate head pose estimation against Gi4E dataset')
 parser.add_argument('-p',
@@ -71,18 +82,17 @@ args = parser.parse_args()
 
 files = list(filter(lambda x: x.endswith('.mp4'), os.listdir(args.path)))
 files.sort()
+files = [files[6]]
 
 all_angles = [EulerAngles(), EulerAngles(), EulerAngles()]
-all_computed_data = [[], [], []]
+all_differences = [[], [], []]
 
 detectors = [HeadPoseModel(), HeadPoseTracker(), HeadPoseGeometry()]
-
 
 if len(args.out_path) != 0 and not os.path.exists(args.out_path):
     os.mkdir(args.out_path)
 
 with open('{}/{}.txt'.format(args.out_path, 'stats'), 'w') as out_file:
-
     for video_file in files:
         print("Evaluating file: ", video_file)
         current_angles = [EulerAngles(), EulerAngles(), EulerAngles()]
@@ -97,23 +107,35 @@ with open('{}/{}.txt'.format(args.out_path, 'stats'), 'w') as out_file:
             detector = detectors[method]
             angles = angles_for_video(detector, "{}/{}".format(args.path, video_file))
 
-            all_computed_data[method] = all_computed_data[
-                                            method] + angles  # append to complete data for deviation computation
             data_length = len(angles)
             # sum differences of angles between ground truth and our result in current file
             for line_index in range(data_length):
-                current_angles[method].roll += abs(float(angles[line_index].roll) - float(truth_data[line_index][3]))
-                current_angles[method].yaw += abs(float(angles[line_index].yaw) - float(truth_data[line_index][4]))
-                current_angles[method].pitch += abs(float(angles[line_index].pitch) - float(truth_data[line_index][5]))
+                if method != 0:
+                    angles[line_index].yaw = angle_correction(angles[line_index].yaw, float(truth_data[line_index][0]),
+                                                              float(truth_data[line_index][2]))
+                    angles[line_index].pitch = angle_correction(angles[line_index].pitch,
+                                                                float(truth_data[line_index][0]),
+                                                                float(truth_data[line_index][1]))
+
+                roll_diff = float(angles[line_index].roll) - float(truth_data[line_index][3])
+                yaw_diff = float(angles[line_index].yaw) - float(truth_data[line_index][4])
+                pitch_diff = float(angles[line_index].pitch) - float(truth_data[line_index][5])
+                current_angles[method].roll += abs(roll_diff)
+                current_angles[method].yaw += abs(yaw_diff)
+                current_angles[method].pitch += abs(pitch_diff)
+                all_differences[method].append([roll_diff, yaw_diff, pitch_diff])
+
             current_angles[method].div(data_length)
 
             all_angles[method].add(current_angles[method])  # sum of differences across all files
-            print("Average error for method ", method, ":\n\tRoll: ", current_angles[method].roll, "\n\tYaw: ",
-                  current_angles[method].yaw, "\n\tPitch: ",
-                  current_angles[method].pitch)
-            out_file.write("Average error for method " + str(method) + ":\n\tRoll: " + str(current_angles[method].roll) + "\n\tYaw: " +
-                  str(current_angles[method].yaw) + "\n\tPitch: " +
-                  str(current_angles[method].pitch))
+            print_and_write(out_file,
+                            "Average error for method {}:\n\tRoll: {} \n\tYaw: {} \n\tPitch: {}".format(method,
+                                                                                                        current_angles[
+                                                                                                            method].roll,
+                                                                                                        current_angles[
+                                                                                                            method].yaw,
+                                                                                                        current_angles[
+                                                                                                            method].pitch))
 
             correct_yaw = [v[4] for v in truth_data]
             if method == 0:
@@ -122,7 +144,8 @@ with open('{}/{}.txt'.format(args.out_path, 'stats'), 'w') as out_file:
                 estimated_yaw = [-v.yaw for v in angles]
             else:
                 estimated_yaw = [-v.yaw for v in angles]
-            create_plot(correct_yaw, estimated_yaw, args.out_path, "{}_{}_{}".format(detector.get_name(), "yaw", video_file[:-4]))
+            create_plot(correct_yaw, estimated_yaw, args.out_path,
+                        "{}_{}_{}".format(detector.get_name(), "yaw", video_file[:-4]))
 
             correct_pitch = [v[5] for v in truth_data]
 
@@ -132,27 +155,33 @@ with open('{}/{}.txt'.format(args.out_path, 'stats'), 'w') as out_file:
                 estimated_pitch = [-(v.pitch - 15) for v in angles]
             else:
                 estimated_pitch = [-(v.pitch - 15) for v in angles]
-            create_plot(correct_pitch, estimated_pitch, args.out_path, "{}_{}_{}".format(detector.get_name(), "pitch", video_file[:-4]))
+            create_plot(correct_pitch, estimated_pitch, args.out_path,
+                        "{}_{}_{}".format(detector.get_name(), "pitch", video_file[:-4]))
 
             correct_roll = [v[3] for v in truth_data]
             estimated_roll = [v.roll for v in angles]
-            create_plot(correct_roll, estimated_roll, args.out_path, "{}_{}_{}".format(detector.get_name(), "roll", video_file[:-4]))
+            create_plot(correct_roll, estimated_roll, args.out_path,
+                        "{}_{}_{}".format(detector.get_name(), "roll", video_file[:-4]))
 
-    print("------------------------------------------------------------------------------------------------")
-    all_computed_data = np.array([v for v in all_computed_data], dtype=float)
+    print_and_write(out_file,
+                    "------------------------------------------------------------------------------------------------")
+    print_and_write(out_file, "*RESULT*")
+    all_differences = np.array(all_differences, dtype=float)
     for method in range(3):
-        all_angles[method].div(len(files))
+        record_count = all_differences[method].shape[0]
+        avg = np.sum(all_differences[method], axis=0) / record_count
         # compute deviation across all files
-        all_computed_data[method] = np.subtract(all_computed_data[method], all_angles[method].as_nparray())
-        all_computed_data[method] = np.power(all_computed_data[method], 2)
-        deviation = np.sum(all_computed_data[method], axis=0)
-        deviation /= (all_computed_data[method].shape[0] - 1)
+        diff = np.subtract(all_differences[method], avg)
+        sq_diff = np.power(diff, 2)
+        sq_diff_sum = np.sum(sq_diff, axis=0)
+        deviation = sq_diff_sum / record_count
         deviation = np.sqrt(deviation)
-        print("METHOD ", method)
-        print("Complete error:", method, ":\n\tRoll: ", all_angles[method].roll, "\n\tYaw: ",
-              all_angles[method].yaw, "\n\tPitch: ",
-              all_angles[method].pitch)
-        print("Complete deviation:", method, ":\n\tRoll: ", deviation[0], "\n\tYaw: ",
-              deviation[1], "\n\tPitch: ",
-              deviation[2])
-    print("------------------------------------------------------------------------------------------------")
+        print_and_write(out_file, "METHOD {}".format(method))
+        print_and_write(out_file, "Complete error:{} :\n\tRoll: {} \n\tYaw: {} \n\tPitch: {}".format(method, all_angles[
+            method].roll, all_angles[method].yaw, all_angles[method].pitch))
+        print_and_write(out_file,
+                        "Complete deviation:{} :\n\tRoll: {} \n\tYaw: {} \n\tPitch: {}".format(method, deviation[0],
+                                                                                               deviation[1],
+                                                                                               deviation[2]))
+    print_and_write(out_file,
+                    "------------------------------------------------------------------------------------------------")
