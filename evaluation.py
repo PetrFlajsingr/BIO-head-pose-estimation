@@ -89,7 +89,7 @@ args = parser.parse_args()
 files = list(filter(lambda x: x.endswith('.mp4'), os.listdir(args.path)))
 files.sort()
 
-files = files[4:]
+files = [files[4]]
 
 all_angles = [EulerAngles(), EulerAngles(), EulerAngles()]
 all_differences = [[], [], []]
@@ -111,7 +111,7 @@ with open('{}/{}.txt'.format(args.out_path, 'stats'), 'w') as out_file:
             truth_data = [row.split('\t') for row in rows]
 
         detectors[1].reset()
-        for method in range(1, 2):  # run detection for each method
+        for method in range(3):  # run detection for each method
             detector = detectors[method]
             angles = angles_for_video(detector, "{}/{}".format(args.path, video_file))
 
@@ -126,7 +126,7 @@ with open('{}/{}.txt'.format(args.out_path, 'stats'), 'w') as out_file:
                                                                 float(truth_data[line_index][1]))
 
                 roll_diff = float(angles[line_index].roll) - float(truth_data[line_index][3])
-                yaw_diff = float(angles[line_index].yaw) - float(truth_data[line_index][4])
+                yaw_diff = float(angles[line_index].yaw) + float(truth_data[line_index][4]) #Our yaw is negative/inverted
                 pitch_diff = float(angles[line_index].pitch) - float(truth_data[line_index][5])
                 current_angles[method].roll += abs(roll_diff)
                 current_angles[method].yaw += abs(yaw_diff)
