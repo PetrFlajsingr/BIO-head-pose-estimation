@@ -21,7 +21,7 @@ class HeadPoseGeometry:
         roll = np.rad2deg(self.__calculate_roll())
         yaw = np.rad2deg(self.__calculate_yaw())
         pitch = np.rad2deg(self.__calculate_pitch())
-        return yaw, pitch, roll
+        return yaw - 3, pitch - 15, roll
 
     def __calculate_roll(self):
         return np.arctan((self.landmarks[right_eye_right_corner][y_coord] - self.landmarks[left_eye_left_corner][y_coord])

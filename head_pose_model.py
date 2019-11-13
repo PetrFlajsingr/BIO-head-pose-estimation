@@ -70,4 +70,4 @@ class HeadPoseModel:
         roll = math.degrees(math.asin(math.sin(roll)))
         yaw = math.degrees(math.asin(math.sin(yaw)))
 
-        return roll, pitch, yaw
+        return roll, pitch - 9, yaw
