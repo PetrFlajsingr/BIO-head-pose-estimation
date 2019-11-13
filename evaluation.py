@@ -90,6 +90,7 @@ files = list(filter(lambda x: x.endswith('.mp4'), os.listdir(args.path)))
 files.sort()
 
 
+
 all_angles = [EulerAngles(), EulerAngles(), EulerAngles()]
 all_differences = [[], [], []]
 
@@ -150,9 +151,9 @@ with open('{}/{}.txt'.format(args.out_path, 'stats'), 'w') as out_file:
 
             correct_yaw = [v[4] for v in truth_data]
             if method == 0:
-                estimated_yaw = [-v.yaw + 4 for v in angles]
+                estimated_yaw = [-v.yaw for v in angles]
             elif method == 2:
-                estimated_yaw = [-v.yaw + 4 for v in angles]
+                estimated_yaw = [-v.yaw + 3 for v in angles]
             else:
                 estimated_yaw = [-v.yaw for v in angles]
             create_plot(correct_yaw, estimated_yaw, args.out_path,
@@ -161,9 +162,9 @@ with open('{}/{}.txt'.format(args.out_path, 'stats'), 'w') as out_file:
             correct_pitch = [v[5] for v in truth_data]
 
             if method == 0:
-                estimated_pitch = [-v.pitch + 4 for v in angles]
-            elif method == 2:
                 estimated_pitch = [-v.pitch + 9 for v in angles]
+            elif method == 2:
+                estimated_pitch = [-v.pitch + 15 for v in angles]
             else:
                 estimated_pitch = [-v.pitch for v in angles]
             create_plot(correct_pitch, estimated_pitch, args.out_path,
