@@ -12,9 +12,9 @@ class HeadPoseTracker:
 
     def __init__(self):
         self.__is_initialised = False
-        self.__yaw = 0.0
-        self.__pitch = 15.0
-        self.__roll = 0.0
+        self.yaw = 0.0
+        self.pitch = 15.0
+        self.roll = 0.0
         self.__init_locations = {}
         self.landmarks = []
 
@@ -22,7 +22,7 @@ class HeadPoseTracker:
         return "tracking"
 
     def __repr__(self):
-        return 'Yaw: {}, Pitch: {}, Roll: {}'.format(self.__yaw, self.__pitch, self.__roll)
+        return 'Yaw: {}, Pitch: {}, Roll: {}'.format(self.yaw, self.pitch, self.roll)
 
     def pose_for_landmarks(self, image, landmarks):
         self.landmarks = landmarks
@@ -30,13 +30,13 @@ class HeadPoseTracker:
             self.__init_tracking()
         if self.__is_initialised:
             self.__detect_pose()
-        return self.__yaw, self.__pitch, self.__roll
+        return self.yaw, self.pitch, self.roll
 
     def reset(self):
         self.__is_initialised = False
-        self.__yaw = 0.0
-        self.__pitch = 15.0
-        self.__roll = 0.0
+        self.yaw = 0.0
+        self.pitch = 15.0
+        self.roll = 0.0
 
     def __init_tracking(self):
         eye_distance_tohead_depth_ratio = 1.6
@@ -58,17 +58,19 @@ class HeadPoseTracker:
     def __detect_pose(self):
         if self.landmarks[left_eye_left_corner][x_coord] != self.landmarks[right_eye_right_corner][x_coord] \
                 and self.landmarks[left_eye_left_corner][y_coord] != self.landmarks[right_eye_right_corner][y_coord]:
-            self.__roll = np.rad2deg(np.arctan(
+            self.roll = np.rad2deg(np.arctan(
                 (self.landmarks[left_eye_left_corner][x_coord] - self.landmarks[right_eye_right_corner][x_coord])
                 / (self.landmarks[left_eye_left_corner][y_coord] - self.landmarks[right_eye_right_corner][y_coord])))
-            is_negative = self.__roll < 0
-            self.__roll = 90 - abs(self.__roll)
+            is_negative = self.roll < 0
+            self.roll = 90 - abs(self.roll)
             if is_negative:
-                self.__roll = -self.__roll
-        self.__yaw += np.rad2deg(np.arctan((self.__init_locations['nose'][x_coord] - self.landmarks[nose_bridge_tip][x_coord])
-                                / self.__init_locations['sphere_radius']))
-        self.__pitch -= np.rad2deg(np.arctan((self.landmarks[nose_bridge_tip][y_coord] - self.__init_locations['nose'][y_coord])
-                                  / self.__init_locations['sphere_radius']))
+                self.roll = -self.roll
+        x_diff = (self.__init_locations['nose'][x_coord] - self.landmarks[nose_bridge_tip][x_coord])
+        self.yaw += np.rad2deg(np.arctan(x_diff
+                                         / self.__init_locations['sphere_radius']))
+        y_diff = (self.landmarks[nose_bridge_tip][y_coord] - self.__init_locations['nose'][y_coord])
+        self.pitch -= np.rad2deg(np.arctan(y_diff
+                                           / self.__init_locations['sphere_radius']))
         self.__init_locations['left_eye'] = self.landmarks[left_eye_left_corner]
         self.__init_locations['right_eye'] = self.landmarks[right_eye_right_corner]
         self.__init_locations['nose'] = self.landmarks[nose_bridge_tip]

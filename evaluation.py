@@ -89,7 +89,6 @@ args = parser.parse_args()
 files = list(filter(lambda x: x.endswith('.mp4'), os.listdir(args.path)))
 files.sort()
 
-files = [files[4]]
 
 all_angles = [EulerAngles(), EulerAngles(), EulerAngles()]
 all_differences = [[], [], []]
@@ -111,6 +110,9 @@ with open('{}/{}.txt'.format(args.out_path, 'stats'), 'w') as out_file:
             truth_data = [row.split('\t') for row in rows]
 
         detectors[1].reset()
+        detectors[1].yaw = float(truth_data[0][4])
+        detectors[1].pitch = float(truth_data[0][5])
+        detectors[1].roll = float(truth_data[0][3])
         for method in range(3):  # run detection for each method
             detector = detectors[method]
             angles = angles_for_video(detector, "{}/{}".format(args.path, video_file))
@@ -126,7 +128,7 @@ with open('{}/{}.txt'.format(args.out_path, 'stats'), 'w') as out_file:
                                                                 float(truth_data[line_index][1]))
 
                 roll_diff = float(angles[line_index].roll) - float(truth_data[line_index][3])
-                yaw_diff = float(angles[line_index].yaw) + float(truth_data[line_index][4]) #Our yaw is negative/inverted
+                yaw_diff = float(angles[line_index].yaw) - float(truth_data[line_index][4])
                 pitch_diff = float(angles[line_index].pitch) - float(truth_data[line_index][5])
                 current_angles[method].roll += abs(roll_diff)
                 current_angles[method].yaw += abs(yaw_diff)
@@ -148,9 +150,9 @@ with open('{}/{}.txt'.format(args.out_path, 'stats'), 'w') as out_file:
 
             correct_yaw = [v[4] for v in truth_data]
             if method == 0:
-                estimated_yaw = [-v.yaw for v in angles]
+                estimated_yaw = [-v.yaw + 4 for v in angles]
             elif method == 2:
-                estimated_yaw = [-v.yaw for v in angles]
+                estimated_yaw = [-v.yaw + 4 for v in angles]
             else:
                 estimated_yaw = [-v.yaw for v in angles]
             create_plot(correct_yaw, estimated_yaw, args.out_path,
@@ -159,11 +161,11 @@ with open('{}/{}.txt'.format(args.out_path, 'stats'), 'w') as out_file:
             correct_pitch = [v[5] for v in truth_data]
 
             if method == 0:
-                estimated_pitch = [-(v.pitch - 10) for v in angles]
+                estimated_pitch = [-v.pitch + 4 for v in angles]
             elif method == 2:
-                estimated_pitch = [-(v.pitch - 15) for v in angles]
+                estimated_pitch = [-v.pitch + 9 for v in angles]
             else:
-                estimated_pitch = [-(v.pitch - 15) for v in angles]
+                estimated_pitch = [-v.pitch for v in angles]
             create_plot(correct_pitch, estimated_pitch, args.out_path,
                         "{}_{}_{}".format(detector.get_name(), "pitch", video_file[:-4]))
 
